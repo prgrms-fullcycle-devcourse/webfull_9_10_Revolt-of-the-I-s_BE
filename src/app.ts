@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { setupSwagger } from './utils/swagger';
+import apiRouter from './routes/route';
 
 dotenv.config();
 
@@ -9,6 +10,7 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 setupSwagger(app);
+app.use(apiRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('🚀 i-Station API Server is Running with pnpm!');
