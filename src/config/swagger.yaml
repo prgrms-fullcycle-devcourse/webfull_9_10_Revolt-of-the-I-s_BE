@@ -1,0 +1,898 @@
+openapi: 3.0.0
+info:
+  title: i-Station Auth & User API
+  description: i-Station 서비스의 인증 및 사용자 관리 API 명세서입니다.
+  version: 1.0.0
+
+servers:
+  - url: http://api.istation.dev/v1
+    description: 개발 서버
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        uuid:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: "mail@istation.dev"
+        name:
+          type: string
+          example: "강영아"
+        phone:
+          type: string
+          example: "010-1234-5678"
+        github_url:
+          type: string
+          nullable: true
+          example: "https://github.com/youngah"
+        profile_image:
+          type: string
+          example: "https://s3.istation.dev/profiles/1.png"
+        status:
+          type: string
+          enum: ["업무 중", "회의 중", "쉬는 중", "자리 비움"]
+          example: "업무 중"
+
+paths:
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: "회원가입"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, phone]
+              properties:
+                email: { type: string, example: "mail@istation.dev" }
+                password: { type: string, format: password, example: "password123!" }
+                name: { type: string, example: "강영아" }
+                phone: { type: string, example: "01012345678" }
+                github_url: { type: string, example: "https://github.com/youngah" }
+                profile_image: {type: string, example: "https://s3.istation.dev/profiles/1.png"}
+      responses:
+        201:
+          description: "가입 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message: { type: string, example: "회원가입이 완료되었습니다." }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: "자체 로그인"
+      description: "로그인 성공 시 유저 상태가 '업무 중'으로 자동 변경됩니다."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        200:
+          description: "로그인 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+
+  /auth/google:
+    post:
+      tags: [Auth]
+      summary: "구글 OAuth 로그인/가입"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idToken: { type: string }
+      responses:
+        200:
+          description: "인증 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+                  isNewUser: { type: boolean }
+                  user: { $ref: '#/components/schemas/User' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: "로그아웃"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "로그아웃 성공 (상태: 자리 비움)"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  status: { type: string, example: "자리 비움" }
+
+  /users/me:
+    get:
+      tags: [User]
+      summary: "내 정보 조회"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /users/me/status:
+    patch:
+      tags: [User]
+      summary: "내 상태 업데이트"
+      description: "실시간 Pusher 전송을 포함합니다."
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: ["업무 중", "회의 중", "쉬는 중", "자리 비움"]
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid: { type: integer }
+                  status: { type: string }
+
+# --- Team Lobby API ---
+  /teams:
+    get:
+      tags: [Team Lobby]
+      summary: "팀 목록 전체 조회"
+      description: "참여 중인 팀과 입장 가능한 팀을 조회하며, UI에 표시할 멤버 프로필 이미지들을 포함합니다."
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uuid: { type: integer, example: 1 }
+                    name: { type: string, example: "i들의 반란" }
+                    member_count: { type: integer, example: 4 }
+                    is_joined: { type: boolean, example: true }
+                    owner_id: { type: integer, example: 1 }
+                    # --- 이 부분이 추가되었습니다 ---
+                    member_profiles:
+                      type: array
+                      items:
+                        type: string
+                      example: 
+                        - "https://s3.istation.dev/profiles/user1.png"
+                        - "https://s3.istation.dev/profiles/user2.png"
+                        - "https://s3.istation.dev/profiles/user3.png"
+                      
+                      description: "팀 카드 하단에 노출할 멤버들의 프로필 이미지 URL 리스트 (최대 3~5개)"
+
+    post:
+      tags: [Team Lobby]
+      summary: "새 팀 생성"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, pin_password]
+              properties:
+                name: { type: string, example: "새로운 프로젝트 팀" }
+                pin_password: { type: string, example: "123456", description: "6자리 숫자 PIN" }
+      responses:
+        201:
+          description: "팀 생성 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid: { type: integer }
+                  name: { type: string }
+
+  /teams/{teamId}:
+    delete:
+      tags: [Team Lobby]
+      summary: "팀 삭제"
+      description: "팀 생성자(Owner)만 가능하며, 관련 모든 데이터가 삭제됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "팀 삭제 완료"
+
+  /teams/{teamId}/members:
+    post:
+      tags: [Team Lobby]
+      summary: "팀 가입 및 입장"
+      description: |
+        팀 보안 PIN 번호를 검증하여 팀 스페이스에 진입합니다.
+        
+        **[비즈니스 로직]**
+        1. 입력된 `password`와 팀의 `pin_password` 일치 여부 확인 (불일치 시 401 반환)
+        2. 해당 팀에 이미 가입된 유저인지 확인
+        3. **최초 입장 시**: `team_member` 테이블에 레코드를 생성(가입)하고 `isFirstEntry: true` 반환
+        4. **재입장 시**: 가입 절차 없이 `isFirstEntry: false` 반환
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: "입장하려는 팀의 고유 ID"
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  example: "123456"
+                  description: "사용자가 입력한 6자리 PIN 번호"
+      responses:
+        200:
+          description: "성공 (가입 또는 입장 완료)"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  isFirstEntry:
+                    type: boolean
+                    example: true
+                    description: "true면 최초 가입(환영 알림용), false면 단순 재입장"
+                  teamName:
+                    type: string
+                    example: "i들의 반란"
+        401:
+          description: "인증 실패"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "비밀번호가 일치하지 않습니다."
+        404:
+          description: "팀을 찾을 수 없음"
+
+  /teams/{teamId}/members/active:
+    get:
+      tags: [Team Lobby]
+      summary: "팀원 목록 조회 (활동 필터)"
+      description: "팀에 소속된 멤버 목록을 조회하며, status 파라미터로 활동 중인 유저만 필터링 가능합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, example: "active" }
+      responses:
+        200:
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    user_id: { type: integer }
+                    name: { type: string }
+                    profile_image: { type: string }
+                    status: { type: string }
+
+  /teams/{teamId}/members/me:
+    delete:
+      tags: [Team Lobby]
+      summary: "팀 탈퇴"
+      description: "팀에서 나갑니다. 마지막 멤버가 나갈 경우 팀은 자동 삭제됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "탈퇴 완료"
+
+  /teams/{teamId}/members/me/position:
+    patch:
+      tags: [Team Lobby]
+      summary: "팀 내 내 포지션 수정"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                position: { type: string, example: "Backend Lead" }
+      responses:
+        200:
+          description: "수정 성공"
+# --- Task Engine API (요청 시스템) ---
+  /teams/{teamId}/tasks:
+    get:
+      tags: [Task Engine]
+      summary: "팀 내 테스크 목록 조회"
+      description: "칸반 보드 구성을 위해 팀 내 모든 테스크를 조회합니다. 각 상태별 테스크 개수와 댓글 개수가 포함됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskQuantity:
+                    type: object
+                    properties:
+                      todo: { type: integer, example: 5 }
+                      doing: { type: integer, example: 3 }
+                      done: { type: integer, example: 8 }
+                      checked: { type: integer, example: 2 }
+                  tasks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer, example: 5 }
+                        title: { type: string, example: "메인 페이지 UI 수정" }
+                        content: { type: string, example: "2px 수정 부탁드립니다." }
+                        status: { type: string, enum: [Todo, Doing, Done, Checked] }
+                        requester_name: { type: string, example: "강영아" }
+                        worker_name: { type: string, example: "김가영" }
+                        comment_count: { type: integer, example: 3 }
+                        created_at: { type: string, format: date-time }
+
+    post:
+      tags: [Task Engine]
+      summary: "새 테스크 생성"
+      description: "새로운 업무 요청을 발행합니다. 초기 상태는 항상 'Todo'로 설정됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content, worker_id]
+              properties:
+                title: { type: string, maxLength: 50, example: "API 명세서 검토" }
+                content: { type: string, example: "회의록 기반으로 최종 API 명세서 확인 부탁드립니다." }
+                worker_id: { type: integer, example: 2, description: "담당 유저 ID" }
+      responses:
+        201:
+          description: "생성 성공"
+
+  /tasks/{taskId}:
+    get:
+      tags: [Task Engine]
+      summary: "테스크 상세 조회"
+      description: "테스크의 상세 내용과 해당 테스크에 달린 댓글 목록을 한 번에 조회합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "상세 정보 반환"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  title: { type: string }
+                  content: { type: string }
+                  status: { type: string }
+                  requester:
+                    type: object
+                    properties:
+                      name: { type: string }
+                  worker:
+                    type: object
+                    properties:
+                      name: { type: string }
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        uuid: { type: integer }
+                        user_name: { type: string }
+                        content: { type: string }
+                        created_at: { type: string, format: date-time }
+
+    delete:
+      tags: [Task Engine]
+      summary: "테스크 삭제"
+      description: "테스크를 삭제하며, 삭제 활동은 팀 로그에 기록됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "삭제 성공"
+
+  /tasks/{taskId}/status:
+    patch:
+      tags: [Task Engine]
+      summary: "테스크 상태 변경"
+      description: "업무의 진행 상태를 변경합니다. 변경 시 활동 로그가 자동으로 생성됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [Todo, Doing, Done, Checked] }
+      responses:
+        200:
+          description: "상태 변경 및 로그 기록 성공"
+
+  /tasks/{teamId}/logs:
+    get:
+      tags: [Task Engine]
+      summary: "팀 활동 로그 조회"
+      description: "팀 내에서 발생한 모든 활동 로그를 최신순으로 조회합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "로그 조회 성공"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uuid: { type: integer }
+                    message: { type: string, example: "영아님이 #5 업무를 Done으로 이동했습니다." }
+                    action_type: { type: string, enum: [CREATE, MOVE, DELETE, UPDATE] }
+                    created_at: { type: string, format: date-time }
+# --- Real-time Comments API (실시간 댓글) ---
+  /tasks/{taskId}/comments:
+    post:
+      tags: [Comments]
+      summary: "댓글 작성"
+      description: "특정 테스크에 댓글을 작성합니다. 저장 성공 시 Pusher를 통해 해당 테스크를 보고 있는 모든 인원에게 실시간 전송됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, example: "이 부분 로직 확인 부탁드려요!" }
+      responses:
+        201:
+          description: "댓글 작성 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid: { type: integer, example: 101 }
+                  user_name: { type: string, example: "강영아" }
+                  profile_image: { type: string, example: "https://s3.istation.dev/profiles/1.png" }
+                  content: { type: string, example: "이 부분 로직 확인 부탁드려요!" }
+                  created_at: { type: string, format: date-time }
+
+  /tasks/comments/{commentId}:
+    patch:
+      tags: [Comments]
+      summary: "댓글 수정"
+      description: "작성한 댓글 내용을 수정합니다. 수정 후 Pusher를 통해 실시간 업데이트됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, example: "수정된 댓글 내용입니다." }
+      responses:
+        200:
+          description: "수정 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid: { type: integer }
+                  content: { type: string }
+                  updated_at: { type: string, format: date-time }
+
+    delete:
+      tags: [Comments]
+      summary: "댓글 삭제"
+      description: "댓글을 삭제합니다. 삭제 이벤트가 Pusher를 통해 실시간으로 전달됩니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "삭제 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message: { type: string, example: "댓글이 삭제되었습니다." }
+# --- Archive & Links API (팀 지식 저장소) ---
+  /teams/{teamId}/archives/meeting:
+    get:
+      tags: [Archive]
+      summary: "회의록 목록 조회"
+      description: "팀 내 작성된 모든 회의록 리스트를 조회합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    archiveId: { type: integer }
+                    title: { type: string, example: "주간 정기 회의 (03.17)" }
+                    summary: { type: string, example: "API 명세 최종 확정 및..." }
+                    created_at: { type: string, format: date-time }
+
+    post:
+      tags: [Archive]
+      summary: "회의록 작성"
+      description: "마크다운(Markdown) 형식을 지원하는 회의록을 작성합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content]
+              properties:
+                title: { type: string, example: "주간 정기 회의 (03.17)" }
+                content: { type: string, example: "# 결정 사항\n- API 구조 확정" }
+      responses:
+        201:
+          description: "작성 성공"
+
+  /archives/meeting/{archiveId}:
+    get:
+      tags: [Archive]
+      summary: "회의록 상세 조회"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: archiveId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "상세 내용 반환"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  archiveId: { type: integer }
+                  title: { type: string }
+                  content: { type: string, description: "마크다운 본문" }
+                  created_at: { type: string, format: date-time }
+
+    patch:
+      tags: [Archive]
+      summary: "회의록 수정"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: archiveId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                content: { type: string }
+      responses:
+        200:
+          description: "수정 성공"
+
+    delete:
+      tags: [Archive]
+      summary: "회의록 삭제"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: archiveId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "삭제 성공"
+
+  /teams/{teamId}/archives/links:
+    get:
+      tags: [Archive]
+      summary: "퀵 링크 목록 조회"
+      description: "피그마, API 명세서 등 팀의 필수 링크 리스트를 조회합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    linkId: { type: integer }
+                    title: { type: string, example: "Figma 기획안" }
+                    url: { type: string, example: "https://figma.com/..." }
+
+    post:
+      tags: [Archive]
+      summary: "퀵 링크 생성"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, url]
+              properties:
+                title: { type: string, example: "API 명세서" }
+                url: { type: string, example: "https://notion.so/..." }
+      responses:
+        201:
+          description: "생성 성공"
+
+  /archives/links/{linkId}:
+    delete:
+      tags: [Archive]
+      summary: "퀵 링크 삭제"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "삭제 성공"
+
+  /teams/{teamId}/archives/documents:
+    get:
+      tags: [Archive]
+      summary: "문서 목록 조회"
+      description: "업로드된 PDF, PPT 등 문서 파일 리스트를 조회합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    docId: { type: integer }
+                    title: { type: string, example: "최종 기획안.pdf" }
+                    file_url: { type: string, example: "https://s3.istation.dev/..." }
+
+    post:
+      tags: [Archive]
+      summary: "문서 등록"
+      description: "S3에 업로드된 문서의 URL 정보를 저장합니다."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, file_url]
+              properties:
+                title: { type: string, example: "구조 설계서.pdf" }
+                file_url: { type: string }
+      responses:
+        201:
+          description: "등록 성공"
+
+  /archives/documents/{docId}:
+    delete:
+      tags: [Archive]
+      summary: "문서 삭제"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: docId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: "삭제 성공"
