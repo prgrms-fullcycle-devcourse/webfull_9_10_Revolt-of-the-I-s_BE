@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes"; // status code 모듈
-import { findTasksByTeam } from "../repositories/taskRepository";
+import { findTasksByTeam, findTaskById } from "../repositories/taskRepository";
 
 interface TaskQuantity {
   Todo: number;
@@ -55,7 +55,46 @@ const getTasksByTeam = async (req: Request, res: Response) => {
 const createTask = (req: Request, res: Response) => {};
 
 // 테스크 상세 조회
-const getTaskDetail = (req: Request, res: Response) => {};
+const getTaskDetail = async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+
+    if (!taskId || isNaN(Number(taskId))) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "유효하지 않은 taskId입니다.",
+      });
+    }
+
+    const task = await findTaskById(Number(taskId));
+
+    if (!task) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "요청한 리소스를 찾을 수 없습니다",
+      });
+    }
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: task,
+      meta: null,
+      error: null,
+    });
+  } catch (error) {
+    console.error("테스크 상세 조회 오류: ", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      data: null,
+      meta: null,
+      error: "서버 오류가 발생했습니다.",
+    });
+  }
+};
 
 // 테스크 삭제
 const deleteTask = (req: Request, res: Response) => {};
