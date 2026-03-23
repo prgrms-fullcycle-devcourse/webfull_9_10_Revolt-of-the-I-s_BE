@@ -63,6 +63,7 @@ export interface CreatedTaskRow {
   created_at: Date;
 }
 
+// 팀별 Task 목록 조회
 export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
   const query = `
     SELECT
@@ -88,6 +89,7 @@ export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
   return result.rows;
 };
 
+// Task 상세 조회
 export const findTaskById = async (
   taskId: number,
 ): Promise<TaskDetailRow | null> => {
@@ -161,4 +163,14 @@ export const insertTask = async (
   );
 
   return result.rows[0]!;
+};
+
+// Task 삭제
+export const deleteTaskById = async (taskId: number): Promise<boolean> => {
+  const result = await pool.query(
+    `DELETE FROM tasks WHERE id = $1 RETURNING id`,
+    [taskId],
+  );
+
+  return result.rows.length > 0;
 };
