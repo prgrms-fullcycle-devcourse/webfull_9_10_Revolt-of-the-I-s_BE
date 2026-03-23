@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes"; // status code 모듈
-import { findTasksByTeam, findTaskById } from "../repositories/taskRepository";
+import {
+  findTasksByTeam,
+  findTaskById,
+  insertTask,
+} from "../repositories/taskRepository";
 
 interface TaskQuantity {
   Todo: number;
@@ -52,7 +56,56 @@ const getTasksByTeam = async (req: Request, res: Response) => {
 };
 
 // 테스크 생성
-const createTask = (req: Request, res: Response) => {};
+const createTask = async (req: Request, res: Response) => {
+  try {
+    const { teamId } = req.params;
+    const { title, content, worker_id } = req.body;
+
+    if (
+      !teamId ||
+      isNaN(Number(teamId)) ||
+      !title ||
+      typeof title !== "string" ||
+      title.trim() === "" ||
+      !content ||
+      typeof content !== "string" ||
+      content.trim() === ""
+    ) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "오류가 발생했습니다.",
+      });
+    }
+
+    // ⚠️ req.user.id (JWT 미들웨어 붙으면 교체) 예정
+    const requesterId = 1;
+
+    const task = await insertTask({
+      teamId: Number(teamId),
+      title: title.trim(),
+      content: content.trim(),
+      requesterId,
+      workerId: worker_id ? Number(worker_id) : null,
+    });
+
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      data: task,
+      meta: null,
+      error: null,
+    });
+  } catch (error) {
+    console.error("테스크 생성 오류: ", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      data: null,
+      meta: null,
+      error: "서버 오류가 발생했습니다.",
+    });
+  }
+};
 
 // 테스크 상세 조회
 const getTaskDetail = async (req: Request, res: Response) => {

@@ -43,6 +43,26 @@ export interface TaskDetailRow {
   comments: CommentRow[];
 }
 
+export interface CreateTaskInput {
+  teamId: number;
+  title: string;
+  content: string;
+  requesterId: number;
+  workerId: number | null;
+}
+
+export interface CreatedTaskRow {
+  id: number;
+  task_number: number;
+  team_id: number;
+  title: string;
+  content: string;
+  status: "Todo";
+  requester_id: number;
+  worker_id: number | null;
+  created_at: Date;
+}
+
 export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
   const query = `
     SELECT
@@ -122,4 +142,23 @@ export const findTaskById = async (
     ...row,
     comments: commentsResult.rows,
   };
+};
+
+// Task 생성
+export const insertTask = async (
+  input: CreateTaskInput,
+): Promise<CreatedTaskRow> => {
+  const { teamId, title, content, requesterId, workerId } = input;
+
+  const result = await pool.query<CreatedTaskRow>(
+    `INSERT INTO tasks (task_number, team_id, title, content, requester_id, worker_id)
+     VALUES (
+       (SELECT COALESCE(MAX(task_number), 0) + 1 FROM tasks WHERE team_id = $1),
+       $1, $2, $3, $4, $5
+     )
+     RETURNING id, task_number, team_id, title, content, status, requester_id, worker_id, created_at`,
+    [teamId, title, content, requesterId, workerId],
+  );
+
+  return result.rows[0]!;
 };
