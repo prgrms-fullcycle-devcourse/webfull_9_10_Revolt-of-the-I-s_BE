@@ -5,6 +5,8 @@ import {
   findTaskById,
   insertTask,
 } from "../repositories/taskRepository";
+import pusher from "../config/pusher";
+import { insertLog } from "src/repositories/logRepository";
 
 interface TaskQuantity {
   Todo: number;
@@ -79,7 +81,7 @@ const createTask = async (req: Request, res: Response) => {
       });
     }
 
-    // ⚠️ req.user.id (JWT 미들웨어 붙으면 교체) 예정
+    // ⚠️ req.user.id JWT 연동 예정
     const requesterId = 1;
 
     const task = await insertTask({
@@ -89,6 +91,25 @@ const createTask = async (req: Request, res: Response) => {
       requesterId,
       workerId: worker_id ? Number(worker_id) : null,
     });
+
+    await insertLog({
+      teamId: task.team_id,
+      userId: requesterId,
+      taskId: task.id,
+      actionType: "CREATE",
+      message: `#${task.task_number} 요청 발행(Todo)`,
+    });
+
+    // ⚠️ createdAt이랑 from은 JWT 구현 이후 추가 예정
+    if (task && task.worker_id) {
+      await pusher.trigger(`user-${task.worker_id}`, "new-task-requested", {
+        message: `🔔 새로운 요청이 있습니다: ${task.title}`,
+        taskId: task.id,
+        taskNumber: task.task_number,
+        teamId: task.team_id,
+      });
+      console.log(`✅ User ${task.worker_id}에게 알림 전송 완료!`);
+    }
 
     res.status(StatusCodes.CREATED).json({
       success: true,
