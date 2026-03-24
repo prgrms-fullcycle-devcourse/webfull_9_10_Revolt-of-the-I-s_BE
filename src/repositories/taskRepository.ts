@@ -63,6 +63,14 @@ export interface CreatedTaskRow {
   created_at: Date;
 }
 
+export interface CreatedCommentRow {
+  uuid: number;
+  task_id: number;
+  content: string;
+  created_at: Date;
+  user: TaskUserInfo;
+}
+
 // 팀별 Task 목록 조회
 export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
   const query = `
@@ -172,5 +180,45 @@ export const deleteTaskById = async (taskId: number): Promise<boolean> => {
     [taskId],
   );
 
+  return result.rows.length > 0;
+};
+
+// 댓글 작성
+export const insertComment = async (
+  taskId: number,
+  userId: number,
+  content: string,
+): Promise<CreatedCommentRow> => {
+  const result = await pool.query(
+    `INSERT INTO comments (task_id, user_id, content)
+     VALUES ($1, $2, $3)
+     RETURNING uuid, task_id, content, created_at, user_id`,
+    [taskId, userId, content],
+  );
+
+  const comment = result.rows[0];
+
+  const commentWithUser = await pool.query(
+    `SELECT
+      c.uuid, c.task_id, c.content, c.created_at,
+      json_build_object(
+        'uuid', u.uuid,
+        'name', u.name,
+        'profile_image', u.profile_image
+      ) AS user
+     FROM comments c
+     JOIN users u ON c.user_id = u.uuid
+     WHERE c.uuid = $1`,
+    [comment.uuid],
+  );
+
+  return commentWithUser.rows[0];
+};
+
+// task 존재 확인
+export const existsTaskById = async (taskId: number): Promise<boolean> => {
+  const result = await pool.query(`SELECT 1 FROM tasks WHERE id = $1`, [
+    taskId,
+  ]);
   return result.rows.length > 0;
 };

@@ -5,6 +5,8 @@ import {
   findTaskById,
   insertTask,
   deleteTaskById,
+  insertComment,
+  existsTaskById,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
 import pool from "../config/db";
@@ -231,7 +233,61 @@ const deleteTask = async (req: Request, res: Response) => {
 const updateTaskStatus = async (req: Request, res: Response) => {};
 
 // 뎃글 작성
-const createComment = (req: Request, res: Response) => {};
+const createComment = async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const { content } = req.body;
+
+    if (!taskId || isNaN(Number(taskId))) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "유효하지 않은 taskId입니다.",
+      });
+    }
+
+    if (!content || typeof content !== "string" || content.trim() === "") {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "오류가 발생했습니다.",
+      });
+    }
+
+    const exists = await existsTaskById(Number(taskId));
+    if (!exists) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "요청한 리소스를 찾을 수 없습니다",
+      });
+    }
+
+    const userId = 1; // TODO: req.user.id로 교체
+
+    const comment = await insertComment(Number(taskId), userId, content.trim());
+
+    await pusher.trigger(`task-${taskId}`, "new-comment", comment);
+
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      data: comment,
+      meta: null,
+      error: null,
+    });
+  } catch (error) {
+    console.error("댓글 작성 오류: ", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      data: null,
+      meta: null,
+      error: "서버 오류가 발생했습니다.",
+    });
+  }
+};
 
 // 댓글 수정
 const updateComment = (req: Request, res: Response) => {};
