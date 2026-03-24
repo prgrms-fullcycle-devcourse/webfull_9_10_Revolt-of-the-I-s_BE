@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  tasksByTeam,
+  getTasksByTeam,
   createTask,
   getTaskDetail,
   deleteTask,
@@ -11,12 +11,10 @@ import {
   getTeamLogs,
 } from "../services/taskService";
 
-const router = express.Router();
-
-router.use(express.json());
+const router: import("express").Router = express.Router();
 
 // GET
-router.get("/teams/:teamId/tasks", tasksByTeam);
+router.get("/teams/:teamId/tasks", getTasksByTeam);
 router.get("/tasks/:taskId", getTaskDetail);
 router.get("/tasks/:teamId/logs", getTeamLogs);
 

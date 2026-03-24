@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/config && cp src/config/swagger.yaml dist/config/swagger.yaml",
     "start": "node dist/server.js",
     "dev": "nodemon --exec ts-node src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,22 +14,32 @@
   "license": "ISC",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "google-auth-library": "^10.6.2",
     "http-status-codes": "^2.3.0",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "pnpm": "^10.32.1",
+    "pusher": "^5.3.3",
     "swagger-ui-express": "^5.0.1",
+    "uuid": "^13.0.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.18.0",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^10.0.0",
     "@types/yamljs": "^0.2.34",
+    "cpy-cli": "^7.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
