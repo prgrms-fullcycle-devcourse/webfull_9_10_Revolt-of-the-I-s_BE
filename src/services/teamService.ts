@@ -14,7 +14,7 @@ import {
 } from '../repositories/teamRepository';
 
 // GET /teams - 팀 목록 전체 조회
-const getAllTeams = catchAsync(async(req: Request, res: Response) => {
+export const getAllTeams = catchAsync(async(req: Request, res: Response) => {
     // 우선 userId 임의로 받음
     const userId = req.body.userId;
     const rows = await findAllWithMembers(userId);
@@ -58,7 +58,7 @@ const getAllTeams = catchAsync(async(req: Request, res: Response) => {
 });
  
 // POST /teams - 팀 생성
-const createTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const createTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // 우선 owner_id 임의로 받음
     const {name, pin_password, owner_id} = req.body
     
@@ -88,12 +88,12 @@ const createTeam = catchAsync(async (req: Request, res: Response, next: NextFunc
 });
  
 // DELETE /teams/:teamId/members/me - 팀 탈퇴
-const leaveTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const leaveTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
 });
 
 // DELETE /teams/:teamId - 팀 삭제
-const deleteTeam = catchAsync(async (req: Request, res: Response) => {
+export const deleteTeam = catchAsync(async (req: Request, res: Response) => {
     const teamId = parseInt(req.params.teamId as string);
     const existing = await findTeamByTeamId(teamId);
     //teamId 없을 때 
@@ -112,7 +112,7 @@ const deleteTeam = catchAsync(async (req: Request, res: Response) => {
 });
 
 // POST /teams/:teamId/members - 팀 가입 / 입장
-const joinTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const joinTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // 우선 userId 임의로 받음
     const userId = req.body.userId;
     const teamId = parseInt(req.params.teamId as string);
@@ -167,21 +167,11 @@ const joinTeam = catchAsync(async (req: Request, res: Response, next: NextFuncti
 });
  
 // PATCH /teams/:teamId/members/me/position - 포지션 수정
-const updatePosition = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const updatePosition = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
 });
  
 // GET /teams/:teamId/members/active - 활동 중인 팀원 목록
-const getActiveMembers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getActiveMembers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
 });
-
-export {
-    getAllTeams,
-    createTeam,
-    leaveTeam,
-    deleteTeam,
-    joinTeam,
-    updatePosition,
-    getActiveMembers
-}
