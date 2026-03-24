@@ -9,6 +9,7 @@ import {
   existsTaskById,
   updateCommentById,
   existsCommentById,
+  deleteCommentById,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
 import pool from "../config/db";
@@ -339,8 +340,6 @@ const updateComment = async (req: Request, res: Response) => {
 
     const updated = await updateCommentById(Number(commentId), content.trim());
 
-    await pusher.trigger(`task-${comment.task_id}`, "update-comment", updated);
-
     res.status(StatusCodes.OK).json({
       success: true,
       data: updated,
@@ -359,7 +358,58 @@ const updateComment = async (req: Request, res: Response) => {
 };
 
 // 댓글 삭제
-const deleteComment = (req: Request, res: Response) => {};
+const deleteComment = async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+
+    if (!commentId || isNaN(Number(commentId))) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "유효하지 않은 commentId입니다.",
+      });
+    }
+
+    const comment = await existsCommentById(Number(commentId));
+    if (!comment) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "요청한 리소스를 찾을 수 없습니다",
+      });
+    }
+
+    const userId = 1; // TODO: req.user.id로 교체
+
+    if (comment.user_id !== userId) {
+      return res.status(StatusCodes.FORBIDDEN).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "해당 작업에 대한 권한이 없습니다",
+      });
+    }
+
+    await deleteCommentById(Number(commentId));
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: { message: "성공적으로 처리되었습니다." },
+      meta: null,
+      error: null,
+    });
+  } catch (error) {
+    console.error("댓글 삭제 오류: ", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      data: null,
+      meta: null,
+      error: "서버 오류가 발생했습니다.",
+    });
+  }
+};
 
 // 팀 활동 로그 조회
 const getTeamLogs = (req: Request, res: Response) => {};

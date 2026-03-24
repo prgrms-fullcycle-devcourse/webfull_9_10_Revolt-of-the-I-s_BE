@@ -255,6 +255,15 @@ export const updateCommentById = async (
   return commentWithUser.rows[0];
 };
 
+// 댓글 삭제
+export const deleteCommentById = async (commentId: number): Promise<boolean> => {
+  const result = await pool.query(
+    `DELETE FROM comments WHERE uuid = $1 RETURNING uuid`,
+    [commentId],
+  );
+  return result.rows.length > 0;
+};
+
 // task 존재 확인
 export const existsTaskById = async (taskId: number): Promise<boolean> => {
   const result = await pool.query(`SELECT 1 FROM tasks WHERE id = $1`, [
