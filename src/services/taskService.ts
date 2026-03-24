@@ -13,7 +13,7 @@ import {
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
 import pool from "../config/db";
-import { insertLog } from "../repositories/logRepository";
+import { findLogsByTeam, insertLog } from "../repositories/logRepository";
 
 interface TaskQuantity {
   Todo: number;
@@ -412,7 +412,37 @@ const deleteComment = async (req: Request, res: Response) => {
 };
 
 // 팀 활동 로그 조회
-const getTeamLogs = (req: Request, res: Response) => {};
+const getTeamLogs = async (req: Request, res: Response) => {
+  try {
+    const { teamId } = req.params;
+
+    if (!teamId || isNaN(Number(teamId))) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        data: null,
+        meta: null,
+        error: "유효하지 않은 teamId입니다.",
+      });
+    }
+
+    const logs = await findLogsByTeam(Number(teamId));
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: logs,
+      meta: null,
+      error: null,
+    });
+  } catch (error) {
+    console.error("로그 조회 오류: ", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      data: null,
+      meta: null,
+      error: "서버 오류가 발생했습니다.",
+    });
+  }
+};
 
 export {
   getTeamTasksData,
