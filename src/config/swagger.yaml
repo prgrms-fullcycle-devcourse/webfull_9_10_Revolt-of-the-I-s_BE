@@ -1400,28 +1400,13 @@ components:
         uuid:
           type: integer
           example: 1
-        email:
-          type: string
-          format: email
-          example: mail@istation.dev
         name:
           type: string
           example: 홍길동
-        phone:
-          type: string
-          example: 010-1234-5678
-        github_url:
-          type: string
-          nullable: true
-          example: https://github.com/username
         profile_image:
           type: string
           nullable: true
           example: https://s3.amazonaws.com/profile.jpg
-        google_uid:
-          type: string
-          nullable: true
-          example: 117400306...
 
     # ── 팀 ──
     Team:
@@ -1537,9 +1522,6 @@ components:
         task_id:
           type: integer
           example: 5
-        user_id:
-          type: integer
-          example: 1
         content:
           type: string
           example: 네, 확인했습니다!
