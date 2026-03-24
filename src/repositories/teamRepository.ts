@@ -12,7 +12,7 @@ export const findAllWithMembers = async (currentUserId: number) => {
             tm.id AS member_id, 
             tm.position, 
             tm.status,
-            u.uuid AS user_uuid, u.email, u.name AS user_name, u.phone, u.github_url, u.profile_image
+            u.uuid AS user_uuid, u.name AS user_name, u.profile_image
         FROM teams t
         LEFT JOIN team_member tm ON t.id = tm.team_id
         LEFT JOIN users u ON tm.user_id = u.uuid;
@@ -35,11 +35,29 @@ export const insertTeam = async (data: {
 }
 
 // 포지션 수정
-export const updateMemberPosition = async (teamId: number, userId: number, position: string) => {
+export const updateMemberPosition = async (teamId: number, userId: string, position: string) => {
+    const sql = `
+            UPDATE team_member 
+            SET position = $3 
+            WHERE team_id = $1 AND user_id = $2 
+            RETURNING *;
+        `;
+        const result = await pool.query(sql, [teamId, userId, position]);
+        return result.rows[0];
 }
 
 // 활동 중인 멤버 조회 
 export const findActiveMembers = async (teamId: number) => {
+    const sql = `
+            SELECT tm.id, tm.team_id, tm.user_id, tm.position, tm.status,
+                u.uuid AS user_uuid, u.name, u.profile_image
+            FROM team_member tm
+            JOIN users u ON tm.user_id = u.uuid
+            WHERE tm.team_id = $1 AND tm.status != '자리 비움';
+        `;
+    const result = await pool.query(sql, [teamId]);
+        
+    return result.rows;
 }
 
 // 팀 삭제
@@ -48,6 +66,13 @@ export const removeTeam = async (teamId: number) => {
         DELETE FROM teams WHERE id = $1
     `
     return await pool.query(sql, [teamId]);
+}
+
+export const deleteTeamMember = async(teamId: number, userId: string) => {
+    const sql = `
+        DELETE FROM team_member WHERE team_id = $1 AND user_id = $2
+    `
+    return await pool.query(sql, [teamId, userId]);
 }
 
 // 팀에 멤버 추가 
@@ -59,6 +84,17 @@ export const insertTeamMember = async ({team_id, user_id, position = "팀원", s
     const result = await pool.query(sql, [team_id, user_id, position, status]);
     return result.rows[0];
 }
+
+// 팀 멤버 수 조회
+export const countTeamMembers = async (teamId: number) => {
+    const sql = `
+        SELECT COUNT(*) as count 
+        FROM team_member 
+        WHERE team_id = $1
+    `;
+    const result = await pool.query(sql, [teamId]);
+    return parseInt(result.rows[0].count, 10);
+};
 
 // 팀이름으로 검색 - 없으면 undefined
 export const findTeamByName = async (name: string) => {
