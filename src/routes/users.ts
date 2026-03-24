@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import express from "express";
 
-const router = Router();
+const router: import("express").Router = express.Router();
 
 // GET
-router.get('/me', () => {});
+router.get("/me", () => {});
 
 // PATCH
-router.patch('/me/status', () => {});
+router.patch("/me/status", () => {});
 
 export default router;

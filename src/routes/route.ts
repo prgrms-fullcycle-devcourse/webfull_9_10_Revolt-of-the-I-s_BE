@@ -1,11 +1,11 @@
-import { Router } from "express";
+import express from "express";
 import authRouter from "./auth";
 import usersRouter from "./users";
 import teamsRouter from "./teams";
 import tasksRouter from "./tasks";
 import archivesRouter from "./archives";
 
-const router: import("express").Router = Router();
+const router: import("express").Router = express.Router();
 
 router.use("/auth", authRouter);
 router.use("/users", usersRouter);
