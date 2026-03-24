@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import catchAsync, { ERROR } from '../utils/error';
 
 import { 
@@ -20,9 +20,9 @@ const getAllTeams = catchAsync(async(req: Request, res: Response) => {
     const rows = await findAllWithMembers(userId);
 
     const teamsMap = rows.reduce((acc: any, row: any) => {
-        if(!acc[row.team_uuid]) { // 팀이 아직 맵이 없으면 바로 생성
-            acc[row.team_uuid] = {
-                uuid: row.team_uuid,
+        if(!acc[row.team_id]) { // 팀이 아직 맵이 없으면 바로 생성
+            acc[row.team_id] = {
+                id: row.team_id,
                 name: row.team_name,
                 owner_id: row.owner_id,
                 isMember: row.is_member === 1,
@@ -30,10 +30,10 @@ const getAllTeams = catchAsync(async(req: Request, res: Response) => {
             };
         }
         // 팀이 이미 맵에 있으면 멤버 정보를 추가
-        if(row.member_uuid) {
-            acc[row.team_uuid].members.push({
-                uuid: row.member_uuid,
-                team_id: row.team_uuid,
+        if(row.member_id) {
+            acc[row.team_id].members.push({
+                id: row.member_id,
+                team_id: row.team_id,
                 user_id: row.user_uuid,
                 position: row.position,
                 status: row.status,
@@ -58,7 +58,7 @@ const getAllTeams = catchAsync(async(req: Request, res: Response) => {
 });
  
 // POST /teams - 팀 생성
-const createTeam = catchAsync(async (req: Request, res: Response) => {
+const createTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // 우선 owner_id 임의로 받음
     const {name, pin_password, owner_id} = req.body
     
@@ -75,7 +75,7 @@ const createTeam = catchAsync(async (req: Request, res: Response) => {
     })
 
     await insertTeamMember({
-        team_id: row.uuid,
+        team_id: row.id,
         user_id: owner_id
     });
 
@@ -88,7 +88,7 @@ const createTeam = catchAsync(async (req: Request, res: Response) => {
 });
  
 // DELETE /teams/:teamId/members/me - 팀 탈퇴
-const leaveTeam = catchAsync(async (req: Request, res: Response) => {
+const leaveTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
 });
 
@@ -112,7 +112,7 @@ const deleteTeam = catchAsync(async (req: Request, res: Response) => {
 });
 
 // POST /teams/:teamId/members - 팀 가입 / 입장
-const joinTeam = catchAsync(async (req: Request, res: Response) => {
+const joinTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // 우선 userId 임의로 받음
     const userId = req.body.userId;
     const teamId = parseInt(req.params.teamId as string);
@@ -167,12 +167,12 @@ const joinTeam = catchAsync(async (req: Request, res: Response) => {
 });
  
 // PATCH /teams/:teamId/members/me/position - 포지션 수정
-const updatePosition = catchAsync(async (req: Request, res: Response) => {
+const updatePosition = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
 });
  
 // GET /teams/:teamId/members/active - 활동 중인 팀원 목록
-const getActiveMembers = catchAsync(async (req: Request, res: Response) => {
+const getActiveMembers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
 });
 
