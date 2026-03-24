@@ -3,10 +3,7 @@ import YAML from "yamljs";
 import path from "path";
 import { Application } from "express";
 
-// const swaggerSpec = YAML.load(path.join(__dirname, '../config/swagger.yaml'));
-const swaggerPath = path.join(process.cwd(), "dist", "config", "swagger.yaml");
-
-const swaggerSpec = YAML.load(swaggerPath);
+const swaggerSpec = YAML.load(path.join(__dirname, "../config/swagger.yaml"));
 
 export const setupSwagger = (app: Application): void => {
   app.use(
