@@ -71,6 +71,14 @@ export interface CreatedCommentRow {
   user: TaskUserInfo;
 }
 
+export interface UpdatedCommentRow {
+  uuid: number;
+  task_id: number;
+  content: string;
+  created_at: Date;
+  user: TaskUserInfo;
+}
+
 // 팀별 Task 목록 조회
 export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
   const query = `
@@ -215,10 +223,51 @@ export const insertComment = async (
   return commentWithUser.rows[0];
 };
 
+// 댓글 수정
+export const updateCommentById = async (
+  commentId: number,
+  content: string,
+): Promise<UpdatedCommentRow | null> => {
+  const result = await pool.query(
+    `UPDATE comments SET content = $1 WHERE uuid = $2
+     RETURNING uuid, task_id, content, created_at, user_id`,
+    [content, commentId],
+  );
+
+  if (result.rows.length === 0) return null;
+
+  const comment = result.rows[0];
+
+  const commentWithUser = await pool.query(
+    `SELECT
+      c.uuid, c.task_id, c.content, c.created_at,
+      json_build_object(
+        'uuid', u.uuid,
+        'name', u.name,
+        'profile_image', u.profile_image
+      ) AS user
+     FROM comments c
+     JOIN users u ON c.user_id = u.uuid
+     WHERE c.uuid = $1`,
+    [comment.uuid],
+  );
+
+  return commentWithUser.rows[0];
+};
+
 // task 존재 확인
 export const existsTaskById = async (taskId: number): Promise<boolean> => {
   const result = await pool.query(`SELECT 1 FROM tasks WHERE id = $1`, [
     taskId,
   ]);
   return result.rows.length > 0;
+};
+
+// 댓글 존재 + 작성자 확인용
+export const existsCommentById = async (commentId: number) => {
+  const result = await pool.query(
+    `SELECT uuid, task_id, user_id FROM comments WHERE uuid = $1`,
+    [commentId],
+  );
+  return result.rows[0] ?? null;
 };
