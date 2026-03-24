@@ -1,7 +1,6 @@
 // 서버 설정과 외부 서비스 초기화 담당
-import path from "path";
-import * as dotenv from "dotenv";
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+import dotenv from "dotenv";
+dotenv.config();
 import app from "./app"
 import "./config/db"
 // import "./config/pusher"
