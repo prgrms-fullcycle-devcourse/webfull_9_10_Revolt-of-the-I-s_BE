@@ -1,9 +1,10 @@
 // 서버 설정과 외부 서비스 초기화 담당
 import dotenv from "dotenv";
 dotenv.config();
+
 import app from "./app"
-import "./config/db"
-// import "./config/pusher"
+import pool from "./config/db";
+
 import { Request, Response, NextFunction } from 'express';
 
 const PORT = process.env.PORT
@@ -26,10 +27,17 @@ app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-app.listen(PORT, () => {
-  console.log(`
-  ################################################
-  🛡️  Server listening on port: ${PORT}
-  ################################################
-  `)
-})
+async function start() {
+  try {
+    await pool.query("SELECT 1");
+    console.log("🔥 DB 연결 확인 완료");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on ${PORT}`);
+    });
+  } catch (err) {
+    console.error("💥 DB 연결 실패:", err);
+  }
+}
+
+start();
