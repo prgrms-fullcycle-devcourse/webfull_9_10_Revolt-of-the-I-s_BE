@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && cp -r src/config dist/config",
+    "build": "tsc && mkdir -p dist/config && cp src/config/swagger.yaml dist/config/swagger.yaml",
     "start": "node dist/server.js",
     "dev": "nodemon --exec ts-node src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
