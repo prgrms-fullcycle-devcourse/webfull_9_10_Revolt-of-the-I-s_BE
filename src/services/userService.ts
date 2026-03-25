@@ -13,13 +13,18 @@ export interface ServiceError {
     message: string;
 }
 
+class AppError extends Error {
+  constructor(public statusCode: number, public message: string) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 // --- [회원가입 로직] ---
 export const signup = async (userData: any): Promise<string> => {
     const existingUser = await userRepo.findUserByEmail(userData.email);
     if (existingUser) {
-        const error: any = new Error("이미 사용 중인 이메일입니다.");
-        error.statusCode = 400; 
-        throw error;
+        throw new AppError(409, "이미 사용 중인 이메일입니다.");
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);

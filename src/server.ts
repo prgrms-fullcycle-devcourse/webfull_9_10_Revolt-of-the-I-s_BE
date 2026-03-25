@@ -13,19 +13,22 @@ interface CustomError extends Error {
   status?: number;
 }
 
-// 서버 에러 모듈
-app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
-    console.error('--- ERROR 발생 ---');
-    console.error(err.stack); 
+// 에러 핸들러
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.log("-------------------------------");
+    console.log("메시지:", err.message);
+    console.log("상태코드(statusCode):", err.statusCode);
+    console.log("-------------------------------");
 
-    const statusCode = err.status || 500;
-    const message = err.message || "서버 내부 에러가 발생했습니다.";
+    const status = err.statusCode || err.status || 500;
+    const message = err.message || "서버 내부 오류가 발생했습니다.";
 
-    res.status(statusCode).json({
+    res.status(status).json({
         success: false,
-        message: message
+        error: message
+        })
     });
-});
+;
 
 async function start() {
   try {
