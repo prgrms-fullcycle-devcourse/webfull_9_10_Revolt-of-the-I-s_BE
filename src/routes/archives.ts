@@ -13,8 +13,7 @@ import {
   deleteDocument,
 } from '../services/archiveService';
  
-const router = express.Router();
-router.use(express.json());
+const router: import("express").Router = express.Router();
 
 // Meeting
 router.get('/teams/:teamId/archives/meeting', getMeetingList);

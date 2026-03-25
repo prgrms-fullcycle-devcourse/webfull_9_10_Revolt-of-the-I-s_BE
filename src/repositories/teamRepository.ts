@@ -1,20 +1,20 @@
 import pool from '../config/db';
 
 //팀 목록 전체 조회 (팀 목록 포함)
-const findAllWithMembers = async (currentUserId: number) => {
+export const findAllWithMembers = async (currentUserId: number) => {
     const sql = `
         SELECT 
-            t.uuid AS team_uuid, 
+            t.id AS team_id, 
             t.name AS team_name, 
             t.owner_id,
             -- 현재 로그인한 유저가 이 팀의 멤버인지 확인 (1이면 true, 0이면 false)
-            MAX(CASE WHEN tm.user_id = $1 THEN 1 ELSE 0 END) OVER(PARTITION BY t.uuid) as is_member,
-            tm.uuid AS member_uuid, 
+            MAX(CASE WHEN tm.user_id = $1 THEN 1 ELSE 0 END) OVER(PARTITION BY t.id) as is_member,
+            tm.id AS member_id, 
             tm.position, 
             tm.status,
-            u.uuid AS user_uuid, u.email, u.name AS user_name, u.phone, u.github_url, u.profile_image
+            u.uuid AS user_uuid, u.name AS user_name, u.profile_image
         FROM teams t
-        LEFT JOIN team_member tm ON t.uuid = tm.team_id
+        LEFT JOIN team_member tm ON t.id = tm.team_id
         LEFT JOIN users u ON tm.user_id = u.uuid;
     `;
     const result = await pool.query(sql, [currentUserId]);
@@ -22,10 +22,10 @@ const findAllWithMembers = async (currentUserId: number) => {
 }
 
 // 팀 생성
-const insertTeam = async (data: {
+export const insertTeam = async (data: {
     name: string;
     pin_password: string;
-    owner_id: number;
+    owner_id: string;
 }) => {
     const sql = `
         INSERT INTO teams (name, pin_password, owner_id) VALUES($1, $2, $3) RETURNING *;
@@ -35,23 +35,48 @@ const insertTeam = async (data: {
 }
 
 // 포지션 수정
-const updateMemberPosition = async (teamId: number, userId: number, position: string) => {
+export const updateMemberPosition = async (teamId: number, userId: string, position: string) => {
+    const sql = `
+            UPDATE team_member 
+            SET position = $3 
+            WHERE team_id = $1 AND user_id = $2 
+            RETURNING *;
+        `;
+        const result = await pool.query(sql, [teamId, userId, position]);
+        return result.rows[0];
 }
 
 // 활동 중인 멤버 조회 
-const findActiveMembers = async (teamId: number) => {
+export const findActiveMembers = async (teamId: number) => {
+    const sql = `
+            SELECT tm.id, tm.team_id, tm.user_id, tm.position, tm.status,
+                u.uuid AS user_uuid, u.name, u.profile_image
+            FROM team_member tm
+            JOIN users u ON tm.user_id = u.uuid
+            WHERE tm.team_id = $1 AND tm.status != '자리 비움';
+        `;
+    const result = await pool.query(sql, [teamId]);
+        
+    return result.rows;
 }
 
 // 팀 삭제
-const removeTeam = async (teamId: number) => {
+export const removeTeam = async (teamId: number) => {
     const sql = `
-        DELETE FROM teams WHERE uuid = $1
+        DELETE FROM teams WHERE id = $1
     `
     return await pool.query(sql, [teamId]);
 }
 
+export const deleteTeamMember = async(teamId: number, userId: string) => {
+    const sql = `
+        DELETE FROM team_member WHERE team_id = $1 AND user_id = $2
+    `
+    return await pool.query(sql, [teamId, userId]);
+}
+
 // 팀에 멤버 추가 
-const insertTeamMember = async ({team_id, user_id, position = "팀원", status="업무 중"}: {team_id: number; user_id: number; position?: string; status?: string;}) => {
+export const insertTeamMember = async ({team_id, user_id, position = "팀원", status="업무 중"}: {team_id: number; user_id: string; position?: string; status?: string;}) => {
     const sql = `INSERT INTO team_member (team_id, user_id, position, status)
         VALUES ($1, $2, $3, $4)
         RETURNING *;`;
@@ -60,10 +85,19 @@ const insertTeamMember = async ({team_id, user_id, position = "팀원", status="
     return result.rows[0];
 }
 
-// -- API 상관없이
+// 팀 멤버 수 조회
+export const countTeamMembers = async (teamId: number) => {
+    const sql = `
+        SELECT COUNT(*) as count 
+        FROM team_member 
+        WHERE team_id = $1
+    `;
+    const result = await pool.query(sql, [teamId]);
+    return parseInt(result.rows[0].count, 10);
+};
 
 // 팀이름으로 검색 - 없으면 undefined
-const findTeamByName = async (name: string) => {
+export const findTeamByName = async (name: string) => {
     const sql = `SELECT * FROM teams WHERE name = $1;`;
 
     const result = await pool.query(sql, [name]);
@@ -71,15 +105,15 @@ const findTeamByName = async (name: string) => {
 }
 
 // 팀id로 검색 - 없으면 undefined
-const findTeamByTeamId = async (teamId: number) => {
-    const sql = `SELECT * FROM teams WHERE uuid = $1;`;
+export const findTeamByTeamId = async (teamId: number) => {
+    const sql = `SELECT * FROM teams WHERE id = $1;`;
 
     const result = await pool.query(sql, [teamId]);
     return result.rows[0]; //없으면 undefined
 }
 
 // 가입되어있는 팀인지 확인
-const findTeamMember = async (teamId: number, userId: number) => {
+export const findTeamMember = async (teamId: number, userId: string) => {
     const sql = `SELECT * FROM team_member WHERE team_id = $1 AND user_id = $2;`;
 
     const result = await pool.query(sql, [teamId, userId]);
@@ -87,15 +121,3 @@ const findTeamMember = async (teamId: number, userId: number) => {
 }
 
 
-export {
-    findAllWithMembers,
-    insertTeam,
-    updateMemberPosition,
-    findActiveMembers,
-    removeTeam,
-
-    findTeamByName,
-    findTeamByTeamId,
-    findTeamMember,
-    insertTeamMember
-}
