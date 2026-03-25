@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import catchAsync, { ERROR } from '../utils/error';
+import bcrypt from 'bcrypt'; 
 
 import { 
     findAllWithMembers,
@@ -90,9 +91,11 @@ export const createTeam = catchAsync(async (req: Request, res: Response, next: N
         });
     }
 
+    const hashedPin = await bcrypt.hash(pin_password, 10);
+
     const row = await insertTeam({
         name : name,
-        pin_password : pin_password,
+        pin_password : hashedPin,
         owner_id : owner_id
     })
 
@@ -155,26 +158,6 @@ export const leaveTeam = catchAsync(async (req: Request, res: Response, next: Ne
 
 });
 
-// DELETE /teams/:teamId - 팀 삭제
-export const deleteTeam = catchAsync(async (req: Request, res: Response) => {
-    const teamId = parseInt(req.params.teamId as string);
-    const team = await findTeamByTeamId(teamId);
-    //teamId 없을 때 
-    if(!team){
-        return res.status(404).json(ERROR.NOT_FOUND);
-    }
-    await removeTeam(teamId);
-    res.status(200).json({
-        success: true,
-        data: {
-            message : "성공적으로 처리되었습니다."
-        },
-        meta: null,
-        error: null
-    })
-
-    //TODO 팀장만? 
-});
 
 // POST /teams/:teamId/members - 팀 가입 / 입장
 export const joinTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -222,7 +205,9 @@ export const joinTeam = catchAsync(async (req: Request, res: Response, next: Nex
         });
     }
 
-    if(team.pin_password !== password) {
+    const isMatch = await bcrypt.compare(password, team.pin_password);
+
+    if(!isMatch) {
         return res.status(403).json(ERROR.FORBIDDEN)
     }
 

@@ -362,31 +362,6 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /teams/{teamId}:
-    delete:
-      tags: [Teams]
-      summary: 팀 삭제
-      description: 팀과 관련된 모든 데이터를 삭제합니다. 삭제 전 재확인이 필요합니다.
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/teamId"
-      responses:
-        "200":
-          description: 팀 삭제 성공
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          description: 팀장만 삭제 가능?? 
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          description: 해당하는 팀이 없음
-          $ref: "#/components/responses/NotFound"
-
   /teams/{teamId}/members:
     post:
       tags: [Teams]
