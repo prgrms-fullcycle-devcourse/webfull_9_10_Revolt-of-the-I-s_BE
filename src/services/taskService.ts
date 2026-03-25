@@ -10,6 +10,7 @@ import {
   updateCommentById,
   existsCommentById,
   deleteCommentById,
+  findTaskOwner,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
 import { findLogsByTeam, insertLog } from "../repositories/logRepository";
@@ -59,7 +60,7 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
   }
 
-  const requesterId = "1"; // TODO: req.user.uuid로 교체
+  const requesterId = req.user!.uuid;
 
   const task = await insertTask({
     teamId: Number(teamId),
@@ -114,12 +115,20 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
   }
 
-  const task = await findTaskById(Number(taskId));
+  const task = await findTaskOwner(Number(taskId));
+
   if (!task) {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
-  const requesterId = "1"; // TODO: req.user.uuid로 교체
+  const requesterId = req.user!.uuid;
+  console.log(
+    "task.requester_id:",
+    task.requester_id,
+    typeof task.requester_id,
+  );
+  console.log("requesterId:", requesterId, typeof requesterId);
+  console.log("일치 여부:", task.requester_id === requesterId);
 
   if (task.requester_id !== requesterId) {
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
@@ -149,7 +158,7 @@ const createComment = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
-  const userId = "1"; // TODO: req.user.uuid로 교체
+  const userId = req.user!.uuid;
 
   const comment = await insertComment(Number(taskId), userId, content.trim());
 
@@ -172,7 +181,7 @@ const updateComment = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
-  const userId = "1"; // TODO: req.user.uuid로 교체
+  const userId = req.user!.uuid;
 
   if (comment.user_id !== userId) {
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
@@ -196,7 +205,7 @@ const deleteComment = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
-  const userId = "1"; // TODO: req.user.uuid로 교체
+  const userId = req.user!.uuid;
 
   if (comment.user_id !== userId) {
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);

@@ -147,10 +147,8 @@ export const findTaskById = async (
     ORDER BY c.created_at ASC
   `;
 
-  const [taskResult, commentsResult] = await Promise.all([
-    pool.query(taskQuery, [taskId]),
-    pool.query(commentsQuery, [taskId]),
-  ]);
+  const taskResult = await pool.query(taskQuery, [taskId]);
+  const commentsResult = await pool.query(commentsQuery, [taskId]);
 
   if (taskResult.rows.length === 0) return null;
 
@@ -188,6 +186,14 @@ export const deleteTaskById = async (taskId: number): Promise<boolean> => {
   );
 
   return result.rows.length > 0;
+};
+
+export const findTaskOwner = async (taskId: number) => {
+  const result = await pool.query(
+    `SELECT id, requester_id FROM tasks WHERE id = $1`,
+    [taskId],
+  );
+  return result.rows[0] ?? null;
 };
 
 // 댓글 작성
