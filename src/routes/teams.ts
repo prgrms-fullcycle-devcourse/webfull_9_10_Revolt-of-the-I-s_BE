@@ -9,8 +9,7 @@ import {
   getActiveMembers,
 } from '../services/teamService';
  
-const router = express.Router();
-router.use(express.json());
+const router: import("express").Router = express.Router();
 
 // GET
 // 팀 목록 전체 조회 
