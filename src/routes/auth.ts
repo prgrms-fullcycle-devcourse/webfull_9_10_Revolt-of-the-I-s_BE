@@ -1,19 +1,38 @@
 import { Router, Request, Response, NextFunction } from "express";
 import catchAsync from "../utils/error";
 import * as userService from "../services/userService";
+import { z } from 'zod';
 
 const router: Router = Router();
+
+const signupSchema = z.object({
+  email: z.string().email("올바른 이메일 형식이 아닙니다."),
+  nickname: z.string().min(2, "닉네임은 최소 2글자 이상이어야 합니다."),
+  password: z.string().min(8, "비밀번호는 8자 이상이어야 합니다.")
+    .regex(/[a-zA-Z]/, "영문자가 포함되어야 합니다.")
+    .regex(/[0-9]/, "숫자가 포함되어야 합니다."),
+});
 
 interface ServiceError {
   statusCode: number;
   message: string;
 }
 
+class AppError extends Error {
+  constructor(public statusCode: number, public message: string) {
+    super(message);
+    Object.setPrototypeOf(this, AppError.prototype);
+  }
+}
+
 // --- [회원가입] ---
-router.post(
-  "/signup",
-  catchAsync(async (req: Request, res: Response) => {
+router.post("/signup", catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
     const userData = req.body;
+
+    if (!userData.email || !userData.password || !userData.name || !userData.phone) {
+      throw new AppError(400, "필수 값 누락 또는 형식이 올바르지 않습니다.");
+    }
+
     const result = await userService.signup(userData);
 
     if (typeof result === "string") {
@@ -25,18 +44,12 @@ router.post(
         error: null,
       });
     }
-
-    return res.status(500).json({
-      success: false,
-      data: null,
-    });
+    throw new AppError(500, "예기치 못한 오류가 발생했습니다.");
   }),
 );
 
 // --- [로그인] ---
-router.post(
-  "/login",
-  catchAsync(async (req: Request, res: Response) => {
+router.post("/login", catchAsync(async (req: Request, res: Response) => {
     const result = await userService.login(req.body);
 
     if ("token" in result) {
@@ -53,18 +66,12 @@ router.post(
       });
     }
 
-    const error = result as ServiceError;
-    return res.status(error.statusCode || 401).json({
-      success: false,
-      error: error.message || "로그인 실패",
-    });
+    throw new AppError(401, "로그인 실패.");
   }),
 );
 
 // --- [로그아웃] ---
-router.post(
-  "/logout",
-  catchAsync(async (req: Request, res: Response) => {
+router.post("/logout", catchAsync(async (req: Request, res: Response) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -78,9 +85,7 @@ router.post(
 );
 
 // --- [구글세션] ---
-router.post(
-  "/google",
-  catchAsync(async (req: Request, res: Response) => {
+router.post("/google", catchAsync(async (req: Request, res: Response) => {
     const { googleToken } = req.body;
 
     const result = await userService.googleLogin(googleToken);
