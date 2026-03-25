@@ -662,7 +662,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TaskWithCommentCount"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -691,20 +696,13 @@ paths:
     delete:
       tags: [Tasks]
       summary: 테스크 삭제
-      description: 요청자 본인만 테스크를 삭제할 수 있습니다.
       parameters:
         - $ref: "#/components/parameters/taskId"
       responses:
         "200":
-          description: 삭제 성공
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
+          $ref: "#/components/schemas/MessageResponse"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   # ──────────────────────────────────────────
   # 5. Comments (실시간 댓글)
@@ -714,7 +712,6 @@ paths:
     post:
       tags: [Comments]
       summary: 댓글 작성
-      description: 테스크에 실시간 댓글을 작성합니다.
       parameters:
         - $ref: "#/components/parameters/taskId"
       requestBody:
@@ -727,24 +724,26 @@ paths:
               properties:
                 content:
                   type: string
-                  example: "확인했습니다!"
+                  example: "네, 확인했습니다!"
       responses:
         "201":
           description: 작성 성공
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CommentResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /tasks/comments/{commentId}:
     patch:
       tags: [Comments]
       summary: 댓글 수정
-      description: 본인이 작성한 댓글 내용을 수정합니다.
       parameters:
         - $ref: "#/components/parameters/commentId"
       requestBody:
@@ -757,39 +756,32 @@ paths:
               properties:
                 content:
                   type: string
+                  example: "수정된 댓글 내용입니다."
       responses:
         "200":
           description: 수정 성공
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CommentResponse"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
     delete:
       tags: [Comments]
       summary: 댓글 삭제
-      description: 본인이 작성한 댓글을 삭제합니다.
       parameters:
         - $ref: "#/components/parameters/commentId"
       responses:
         "200":
-          description: 삭제 성공
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "#/components/schemas/MessageResponse"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   # ──────────────────────────────────────────
   # 6. Archives
@@ -834,12 +826,11 @@ paths:
     get:
       tags: [Logs]
       summary: 팀 활동 로그 조회
-      description: 팀의 모든 활동 로그를 최신순으로 조회합니다.
       parameters:
         - $ref: "#/components/parameters/teamId"
       responses:
         "200":
-          description: 로그 조회 성공
+          description: 활동 로그 목록 반환
           content:
             application/json:
               schema:
@@ -851,8 +842,458 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/LogResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+
+  #   delete:
+  #     tags: [Comments]
+  #     summary: 댓글 삭제
+  #     description: 댓글을 삭제하고 Pusher로 실시간 전송합니다.
+  #     security:
+  #       - BearerAuth: []
+  #     parameters:
+  #       - $ref: "#/components/parameters/commentId"
+  #     responses:
+  #       "200":
+  #         description: 댓글 삭제 성공
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/MessageResponse"
+  #       "401":
+  #         $ref: "#/components/responses/Unauthorized"
+  #       "403":
+  #         $ref: "#/components/responses/Forbidden"
+  #       "404":
+  #         $ref: "#/components/responses/NotFound"
+
+#   # ──────────────────────────────────────────
+#   # 6. Archives
+#   # ──────────────────────────────────────────
+
+# /teams/{teamId}/archives/meeting:
+#   get:
+#     tags: [Archives]
+#     summary: 회의록 목록 조회
+#     description: 팀 내 전체 회의록 리스트를 조회합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/teamId"
+#     responses:
+#       "200":
+#         description: 회의록 목록 반환
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       type: array
+#                       items:
+#                         $ref: "#/components/schemas/ArchiveSummary"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+#   post:
+#     tags: [Archives]
+#     summary: 회의록 작성
+#     description: Markdown 텍스트로 회의록을 저장합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/teamId"
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             required: [title, content]
+#             properties:
+#               title:
+#                 type: string
+#                 maxLength: 100
+#                 example: 주간 회의록 (03.11)
+#               content:
+#                 type: string
+#                 description: Markdown 형식의 회의 내용
+#                 example: "## 결정 사항\n- MVP 기능 확정\n- 이번 주 UI 완성"
+#     responses:
+#       "201":
+#         description: 회의록 작성 성공
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       $ref: "#/components/schemas/Archive"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+# /archives/meeting/{archiveId}:
+#   get:
+#     tags: [Archives]
+#     summary: 회의록 상세 조회
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/archiveId"
+#     responses:
+#       "200":
+#         description: 회의록 상세 반환
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       $ref: "#/components/schemas/Archive"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+#   patch:
+#     tags: [Archives]
+#     summary: 회의록 수정
+#     description: Markdown 텍스트로 회의록을 수정합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/archiveId"
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             properties:
+#               title:
+#                 type: string
+#                 maxLength: 100
+#                 example: 주간 회의록 (03.11) - 수정
+#               content:
+#                 type: string
+#                 description: Markdown 형식의 회의 내용
+#                 example: "## 결정 사항\n- MVP 기능 확정 (수정)"
+#     responses:
+#       "200":
+#         description: 회의록 수정 성공
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       $ref: "#/components/schemas/Archive"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "403":
+#         $ref: "#/components/responses/Forbidden"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+#   delete:
+#     tags: [Archives]
+#     summary: 회의록 삭제
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/archiveId"
+#     responses:
+#       "200":
+#         description: 회의록 삭제 성공
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/MessageResponse"
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "403":
+#         $ref: "#/components/responses/Forbidden"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+# /teams/{teamId}/archives/links:
+#   get:
+#     tags: [Archives]
+#     summary: 퀵 링크 목록 조회
+#     description: 피그마, API 명세서 등 팀 필수 링크를 조회합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/teamId"
+#     responses:
+#       "200":
+#         description: 퀵 링크 목록 반환
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       type: array
+#                       items:
+#                         $ref: "#/components/schemas/ArchiveSummary"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+#   post:
+#     tags: [Archives]
+#     summary: 퀵 링크 생성
+#     description: 피그마, API 명세서 등 팀 필수 링크를 등록합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/teamId"
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             required: [title, content]
+#             properties:
+#               title:
+#                 type: string
+#                 maxLength: 100
+#                 example: 기획서 (Notion)
+#               content:
+#                 type: string
+#                 description: 실제 연결될 URL
+#                 example: https://notion.so/...
+#     responses:
+#       "201":
+#         description: 퀵 링크 등록 성공
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       $ref: "#/components/schemas/Archive"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "400":
+#         description: 필수값(이름, URL) 미입력
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/ErrorResponse"
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+# /archives/links/{linkId}:
+#   delete:
+#     tags: [Archives]
+#     summary: 퀵 링크 삭제
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - name: linkId
+#         in: path
+#         required: true
+#         schema:
+#           type: integer
+#         example: 1
+#     responses:
+#       "200":
+#         description: 퀵 링크 삭제 성공
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/MessageResponse"
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "403":
+#         $ref: "#/components/responses/Forbidden"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+# /teams/{teamId}/archives/documents:
+#   get:
+#     tags: [Archives]
+#     summary: 문서 목록 조회
+#     description: 팀의 모든 문서(pdf, ppt 등) 목록을 조회합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/teamId"
+#     responses:
+#       "200":
+#         description: 문서 목록 반환
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       type: array
+#                       items:
+#                         $ref: "#/components/schemas/ArchiveSummary"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+#   post:
+#     tags: [Archives]
+#     summary: 문서 등록
+#     description: pdf, ppt 등 문서를 팀 아카이브에 등록합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - $ref: "#/components/parameters/teamId"
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             required: [title, content]
+#             properties:
+#               title:
+#                 type: string
+#                 maxLength: 100
+#                 example: i-Station 기획서 v1.pdf
+#               content:
+#                 type: string
+#                 description: 문서 URL (AWS S3 등)
+#                 example: https://s3.amazonaws.com/...
+#     responses:
+#       "201":
+#         description: 문서 등록 성공
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       $ref: "#/components/schemas/Archive"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+# /archives/documents/{docId}:
+#   delete:
+#     tags: [Archives]
+#     summary: 문서 삭제
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - name: docId
+#         in: path
+#         required: true
+#         schema:
+#           type: integer
+#         example: 1
+#     responses:
+#       "200":
+#         description: 문서 삭제 성공
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/MessageResponse"
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "403":
+#         $ref: "#/components/responses/Forbidden"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
+
+#   # ──────────────────────────────────────────
+#   # 7. Logs (팀 활동 로그)
+#   # ──────────────────────────────────────────
+
+# /tasks/{teamId}/logs:
+#   get:
+#     tags: [Logs]
+#     summary: 팀 활동 로그 조회
+#     description: 팀의 활동 로그를 최신순으로 조회합니다. new(읽지 않은 로그) 선별이 가능합니다.
+#     security:
+#       - BearerAuth: []
+#     parameters:
+#       - name: teamId
+#         in: path
+#         required: true
+#         schema:
+#           type: integer
+#         example: 1
+#       - name: new
+#         in: query
+#         required: false
+#         schema:
+#           type: boolean
+#         description: true 시 읽지 않은 로그만 반환
+#         example: true
+#     responses:
+#       "200":
+#         description: 활동 로그 목록 반환
+#         content:
+#           application/json:
+#             schema:
+#               allOf:
+#                 - $ref: "#/components/schemas/SuccessResponse"
+#                 - type: object
+#                   properties:
+#                     data:
+#                       type: array
+#                       items:
+#                         $ref: "#/components/schemas/Log"
+#                     meta:
+#                       nullable: true
+#                       example: null
+#       "401":
+#         $ref: "#/components/responses/Unauthorized"
+#       "404":
+#         $ref: "#/components/responses/NotFound"
 
 # ──────────────────────────────────────────
 # Components
@@ -887,62 +1328,28 @@ components:
       schema:
         type: integer
       example: 10
-  #   archiveId:
-  #     name: archiveId
-  #     in: path
-  #     required: true
-  #     schema:
-  #       type: integer
-  #     example: 3
 
   responses:
     Unauthorized:
-      description: 인증 토큰이 없거나 유효하지 않습니다
+      description: 인증 오류
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            data: null
-            meta: null
-            error: 인증 토큰이 없거나 유효하지 않습니다
     Forbidden:
-      description: 해당 작업에 대한 권한이 없습니다
+      description: 권한 오류
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            data: null
-            meta: null
-            error: 해당 작업에 대한 권한이 없습니다
     NotFound:
-      description: 요청한 리소스를 찾을 수 없습니다
+      description: 리소스 없음
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            data: null
-            meta: null
-            error: 요청한 리소스를 찾을 수 없습니다
-    Conflict:
-      description: 이미 존재하는 리소스입니다
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            data: null
-            meta: null
-            error: 이미 존재하는 리소스입니다
 
   schemas:
-    # ── 공통 응답 래퍼 ──
     SuccessResponse:
       type: object
       properties:
@@ -982,7 +1389,6 @@ components:
         error:
           type: string
 
-    # ── 유저 ──
     UserResponse:
       type: object
       properties:
@@ -995,55 +1401,39 @@ components:
         profile_image:
           type: string
           nullable: true
-          example: https://s3.amazonaws.com/profile.jpg
 
     UserSummary:
       type: object
       properties:
         uuid:
           type: string
-          example: "550e8400-e29b-41d4-a716-446655440000"
+          example: "1"
         name:
           type: string
-          example: 홍길동
+          example: "kim"
         profile_image:
           type: string
           nullable: true
-          example: null
 
-    # ── 팀 ──
     Team:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         name:
           type: string
-          example: i들의 반란
         owner_id:
           type: string
-          example: "550e8400-e29b-41d4-a716-446655440000"
 
     TeamMember:
       type: object
       properties:
         id:
           type: integer
-          example: 1
-        team_id:
-          type: integer
-          example: 1
-        user_id:
-          type: string
-          example: "550e8400-e29b-41d4-a716-446655440000"
         position:
           type: string
-          example: Backend Lead
         status:
           type: string
-          enum: ["업무 중", "회의 중", "쉬는 중", "자리 비움"]
-          example: 업무 중
         user:
           $ref: "#/components/schemas/UserResponse"
 
@@ -1052,25 +1442,13 @@ components:
         - $ref: "#/components/schemas/Team"
         - type: object
           properties:
-            id:
-              type: integer
-              example: 1
-            name:
-              type: string
-              example: i들의 반란
-            owner_id:
-              type: string
-              example: "550e8400-e29b-41d4-a716-446655440000"
             isMember:
               type: boolean
-              description: "현재 로그인한 유저가 이 팀의 멤버인지 여부"
-              example: true
             members:
               type: array
               items:
                 $ref: "#/components/schemas/TeamMember"
 
-    # ── 태스크 ──
     TaskQuantity:
       type: object
       properties:
@@ -1079,13 +1457,10 @@ components:
           example: 1
         Doing:
           type: integer
-          example: 0
         Done:
           type: integer
-          example: 0
         Checked:
           type: integer
-          example: 0
 
     TaskWithCommentCount:
       type: object
@@ -1102,10 +1477,6 @@ components:
           type: string
         status:
           type: string
-          enum: [Todo, Doing, Done, Checked]
-        requester_id:
-          type: string
-          nullable: true
         worker_id:
           type: string
           nullable: true
@@ -1130,7 +1501,6 @@ components:
               items:
                 $ref: "#/components/schemas/CommentResponse"
 
-    # ── 댓글 ──
     CommentResponse:
       type: object
       properties:
@@ -1146,51 +1516,6 @@ components:
         user:
           $ref: "#/components/schemas/UserSummary"
 
-    # ── 아카이브 ──
-    # Archive:
-    #   type: object
-    #   properties:
-    #     uuid:
-    #       type: integer
-    #       example: 1
-    #     team_id:
-    #       type: integer
-    #       example: 1
-    #     type:
-    #       type: string
-    #       enum: [LINK, NOTE, PDF]
-    #       example: NOTE
-    #     title:
-    #       type: string
-    #       example: 주간 회의록 (03.11)
-    #     content:
-    #       type: string
-    #       nullable: true
-    #       example: "## 결정 사항\n- MVP 기능 확정"
-    #     created_at:
-    #       type: string
-    #       format: date-time
-    #       example: "2026-03-11T10:00:00Z"
-
-    # ArchiveSummary:
-    #   type: object
-    #   properties:
-    #     uuid:
-    #       type: integer
-    #       example: 1
-    #     type:
-    #       type: string
-    #       enum: [LINK, NOTE, PDF]
-    #       example: NOTE
-    #     title:
-    #       type: string
-    #       example: 주간 회의록 (03.11)
-    #     created_at:
-    #       type: string
-    #       format: date-time
-    #       example: "2026-03-11T10:00:00Z"
-
-    # ── 로그 ──
     LogResponse:
       type: object
       properties:
