@@ -31,9 +31,13 @@ export const authMiddleware = (
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       uuid: string;
+      id?: string;
       email: string;
     };
-    req.user = decoded;
+    req.user = {
+      uuid: decoded.uuid ?? decoded.id!,
+      email: decoded.email,
+    };
     next();
   } catch (err) {
     return res.status(401).json({
