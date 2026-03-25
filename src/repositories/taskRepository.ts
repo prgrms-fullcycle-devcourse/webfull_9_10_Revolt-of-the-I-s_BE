@@ -7,22 +7,22 @@ export interface TaskRow {
   title: string;
   content: string;
   status: "Todo" | "Doing" | "Done" | "Checked";
-  requester_id: number;
-  worker_id: number | null;
+  requester_id: string;
+  worker_id: string | null;
   created_at: Date;
   comment_count: number;
 }
 
 export interface TaskUserInfo {
-  uuid: number;
+  uuid: string;
   name: string;
   profile_image: string | null;
 }
 
 export interface CommentRow {
-  uuid: number;
+  id: number;
   task_id: number;
-  user_id: number;
+  user_id: string;
   content: string;
   created_at: Date;
   user: TaskUserInfo;
@@ -35,8 +35,8 @@ export interface TaskDetailRow {
   title: string;
   content: string;
   status: "Todo" | "Doing" | "Done" | "Checked";
-  requester_id: number;
-  worker_id: number | null;
+  requester_id: string;
+  worker_id: string | null;
   created_at: Date;
   requester: TaskUserInfo;
   worker: TaskUserInfo | null;
@@ -47,8 +47,8 @@ export interface CreateTaskInput {
   teamId: number;
   title: string;
   content: string;
-  requesterId: number;
-  workerId: number | null;
+  requesterId: string;
+  workerId: string | null;
 }
 
 export interface CreatedTaskRow {
@@ -58,13 +58,13 @@ export interface CreatedTaskRow {
   title: string;
   content: string;
   status: "Todo";
-  requester_id: number;
-  worker_id: number | null;
+  requester_id: string;
+  worker_id: string | null;
   created_at: Date;
 }
 
 export interface CreatedCommentRow {
-  uuid: number;
+  id: number;
   task_id: number;
   content: string;
   created_at: Date;
@@ -72,7 +72,7 @@ export interface CreatedCommentRow {
 }
 
 export interface UpdatedCommentRow {
-  uuid: number;
+  id: number;
   task_id: number;
   content: string;
   created_at: Date;
@@ -92,7 +92,7 @@ export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
       t.requester_id,
       t.worker_id,
       t.created_at,
-      COALESCE(COUNT(c.uuid), 0)::INT AS comment_count
+      COALESCE(COUNT(c.id), 0)::INT AS comment_count
     FROM tasks t
     LEFT JOIN comments c ON t.id = c.task_id
     WHERE t.team_id = $1
@@ -135,7 +135,7 @@ export const findTaskById = async (
 
   const commentsQuery = `
     SELECT
-      c.uuid, c.task_id, c.content, c.created_at,
+      c.id, c.task_id, c.content, c.created_at,
       json_build_object(
         'uuid', u.uuid,
         'name', u.name,
@@ -180,7 +180,6 @@ export const insertTask = async (
 
   return result.rows[0]!;
 };
-
 // Task 삭제
 export const deleteTaskById = async (taskId: number): Promise<boolean> => {
   const result = await pool.query(
@@ -194,13 +193,13 @@ export const deleteTaskById = async (taskId: number): Promise<boolean> => {
 // 댓글 작성
 export const insertComment = async (
   taskId: number,
-  userId: number,
+  userId: string,
   content: string,
 ): Promise<CreatedCommentRow> => {
   const result = await pool.query(
     `INSERT INTO comments (task_id, user_id, content)
      VALUES ($1, $2, $3)
-     RETURNING uuid, task_id, content, created_at, user_id`,
+     RETURNING id, task_id, content, created_at, user_id`,
     [taskId, userId, content],
   );
 
@@ -208,7 +207,7 @@ export const insertComment = async (
 
   const commentWithUser = await pool.query(
     `SELECT
-      c.uuid, c.task_id, c.content, c.created_at,
+      c.id, c.task_id, c.content, c.created_at,
       json_build_object(
         'uuid', u.uuid,
         'name', u.name,
@@ -216,8 +215,8 @@ export const insertComment = async (
       ) AS user
      FROM comments c
      JOIN users u ON c.user_id = u.uuid
-     WHERE c.uuid = $1`,
-    [comment.uuid],
+     WHERE c.id = $1`,
+    [comment.id],
   );
 
   return commentWithUser.rows[0];
@@ -229,8 +228,8 @@ export const updateCommentById = async (
   content: string,
 ): Promise<UpdatedCommentRow | null> => {
   const result = await pool.query(
-    `UPDATE comments SET content = $1 WHERE uuid = $2
-     RETURNING uuid, task_id, content, created_at, user_id`,
+    `UPDATE comments SET content = $1 WHERE id = $2
+     RETURNING id, task_id, content, created_at, user_id`,
     [content, commentId],
   );
 
@@ -240,7 +239,7 @@ export const updateCommentById = async (
 
   const commentWithUser = await pool.query(
     `SELECT
-      c.uuid, c.task_id, c.content, c.created_at,
+      c.id, c.task_id, c.content, c.created_at,
       json_build_object(
         'uuid', u.uuid,
         'name', u.name,
@@ -248,17 +247,19 @@ export const updateCommentById = async (
       ) AS user
      FROM comments c
      JOIN users u ON c.user_id = u.uuid
-     WHERE c.uuid = $1`,
-    [comment.uuid],
+     WHERE c.id = $1`,
+    [comment.id],
   );
 
   return commentWithUser.rows[0];
 };
 
 // 댓글 삭제
-export const deleteCommentById = async (commentId: number): Promise<boolean> => {
+export const deleteCommentById = async (
+  commentId: number,
+): Promise<boolean> => {
   const result = await pool.query(
-    `DELETE FROM comments WHERE uuid = $1 RETURNING uuid`,
+    `DELETE FROM comments WHERE id = $1 RETURNING id`,
     [commentId],
   );
   return result.rows.length > 0;
@@ -275,7 +276,7 @@ export const existsTaskById = async (taskId: number): Promise<boolean> => {
 // 댓글 존재 + 작성자 확인용
 export const existsCommentById = async (commentId: number) => {
   const result = await pool.query(
-    `SELECT uuid, task_id, user_id FROM comments WHERE uuid = $1`,
+    `SELECT id, task_id, user_id FROM comments WHERE id = $1`,
     [commentId],
   );
   return result.rows[0] ?? null;

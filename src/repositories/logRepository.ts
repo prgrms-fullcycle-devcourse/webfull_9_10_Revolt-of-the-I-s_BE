@@ -3,16 +3,16 @@ import { TaskUserInfo } from "./taskRepository";
 
 export interface InsertLogInput {
   teamId: number;
-  userId: number;
+  userId: string;
   taskId: number;
   actionType: "CREATE" | "MOVE" | "DELETE" | "UPDATE";
   message: string;
 }
 
 export interface LogRow {
-  uuid: number;
+  id: number;
   team_id: number;
-  user_id: number;
+  user_id: string;
   task_id: number;
   action_type: string;
   message: string;
@@ -33,7 +33,7 @@ export const insertLog = async (input: InsertLogInput): Promise<void> => {
 export const findLogsByTeam = async (teamId: number): Promise<LogRow[]> => {
   const result = await pool.query(
     `SELECT
-      l.uuid, l.team_id, l.user_id, l.task_id,
+      l.id, l.team_id, l.user_id, l.task_id,
       l.action_type, l.message, l.created_at,
       json_build_object(
         'uuid', u.uuid,

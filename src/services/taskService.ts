@@ -12,7 +12,6 @@ import {
   deleteCommentById,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
-import pool from "../config/db";
 import { findLogsByTeam, insertLog } from "../repositories/logRepository";
 
 interface TaskQuantity {
@@ -88,14 +87,14 @@ const createTask = async (req: Request, res: Response) => {
       });
     }
 
-    const requesterId = 1; // TODO: req.user.id로 교체
+    const requesterId = "1"; // TODO: req.user.id로 교체
 
     const task = await insertTask({
       teamId: Number(teamId),
       title: title.trim(),
       content: content.trim(),
       requesterId,
-      workerId: worker_id ? Number(worker_id) : null,
+      workerId: worker_id ? String(worker_id) : null,
     });
 
     await insertLog({
@@ -201,7 +200,7 @@ const deleteTask = async (req: Request, res: Response) => {
       });
     }
 
-    const requesterId = 1; // TODO: req.user.id로 교체
+    const requesterId = "1"; // TODO: req.user.id로 교체
 
     // 요청자 본인만 삭제 가능
     if (task.requester_id !== requesterId) {
@@ -269,7 +268,7 @@ const createComment = async (req: Request, res: Response) => {
       });
     }
 
-    const userId = 1; // TODO: req.user.id로 교체
+    const userId = "1"; // TODO: req.user.id로 교체
 
     const comment = await insertComment(Number(taskId), userId, content.trim());
 
@@ -326,7 +325,7 @@ const updateComment = async (req: Request, res: Response) => {
       });
     }
 
-    const userId = 1; // TODO: req.user.id로 교체
+    const userId = "1"; // TODO: req.user.id로 교체
 
     // 작성자 본인만 수정 가능
     if (comment.user_id !== userId) {
@@ -381,7 +380,7 @@ const deleteComment = async (req: Request, res: Response) => {
       });
     }
 
-    const userId = 1; // TODO: req.user.id로 교체
+    const userId = "1"; // TODO: req.user.id로 교체
 
     if (comment.user_id !== userId) {
       return res.status(StatusCodes.FORBIDDEN).json({
