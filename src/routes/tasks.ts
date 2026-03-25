@@ -10,24 +10,25 @@ import {
   deleteComment,
   getTeamLogs,
 } from "../services/taskService";
+import { authMiddleware } from "../utils/auth";
 
 const router: import("express").Router = express.Router();
 
 // GET
-router.get("/teams/:teamId/tasks", getTasksByTeam);
-router.get("/tasks/:taskId", getTaskDetail);
-router.get("/tasks/:teamId/logs", getTeamLogs);
+router.get("/teams/:teamId/tasks", authMiddleware, getTasksByTeam);
+router.get("/tasks/:teamId/logs", authMiddleware, getTeamLogs);
+router.get("/tasks/:taskId", authMiddleware, getTaskDetail);
 
 // POST
-router.post("/teams/:teamId/tasks", createTask);
-router.post("/tasks/:taskId/comments", createComment);
+router.post("/teams/:teamId/tasks", authMiddleware, createTask);
+router.post("/tasks/:taskId/comments", authMiddleware, createComment);
 
 // PATCH
 router.patch("/tasks/:taskId/status", updateTaskStatus);
-router.patch("/tasks/comments/:commentId", updateComment);
+router.patch("/tasks/comments/:commentId", authMiddleware, updateComment);
 
 // DELETE
-router.delete("/tasks/:taskId", deleteTask);
-router.delete("/tasks/comments/:commentId", deleteComment);
+router.delete("/tasks/:taskId", authMiddleware, deleteTask);
+router.delete("/tasks/comments/:commentId", authMiddleware, deleteComment);
 
 export default router;
