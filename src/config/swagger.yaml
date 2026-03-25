@@ -262,9 +262,9 @@ paths:
   #       "401":
   #         $ref: "#/components/responses/Unauthorized"
 
-  # ──────────────────────────────────────────
-  # 3. Teams (팀 로비)
-  # ──────────────────────────────────────────
+#   # ──────────────────────────────────────────
+#   # 3. Teams (팀 로비)
+#   # ──────────────────────────────────────────
 
   /teams:
     get:
@@ -813,9 +813,9 @@ paths:
   #       "404":
   #         $ref: "#/components/responses/NotFound"
 
-  # ──────────────────────────────────────────
-  # 5. Comments (실시간 댓글)
-  # ──────────────────────────────────────────
+#   # ──────────────────────────────────────────
+#   # 5. Comments (실시간 댓글)
+#   # ──────────────────────────────────────────
 
   # /tasks/{taskId}/comments:
   #   post:
@@ -921,9 +921,9 @@ paths:
   #       "404":
   #         $ref: "#/components/responses/NotFound"
 
-  # ──────────────────────────────────────────
-  # 6. Archives
-  # ──────────────────────────────────────────
+#   # ──────────────────────────────────────────
+#   # 6. Archives
+#   # ──────────────────────────────────────────
 
   # /teams/{teamId}/archives/meeting:
   #   get:
@@ -1304,9 +1304,9 @@ paths:
   #       "404":
   #         $ref: "#/components/responses/NotFound"
 
-  # ──────────────────────────────────────────
-  # 7. Logs (팀 활동 로그)
-  # ──────────────────────────────────────────
+#   # ──────────────────────────────────────────
+#   # 7. Logs (팀 활동 로그)
+#   # ──────────────────────────────────────────
 
   # /tasks/{teamId}/logs:
   #   get:
@@ -1351,46 +1351,46 @@ paths:
   #       "404":
   #         $ref: "#/components/responses/NotFound"
 
-# ──────────────────────────────────────────
-# Components
-# ──────────────────────────────────────────
+# # ──────────────────────────────────────────
+# # Components
+# # ──────────────────────────────────────────
 
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+# components:
+#   securitySchemes:
+#     BearerAuth:
+#       type: http
+#       scheme: bearer
+#       bearerFormat: JWT
 
-  parameters:
-    teamId:
-      name: teamId
-      in: path
-      required: true
-      schema:
-        type: integer
-      example: 1
-    taskId:
-      name: taskId
-      in: path
-      required: true
-      schema:
-        type: integer
-      example: 5
-    commentId:
-      name: commentId
-      in: path
-      required: true
-      schema:
-        type: integer
-      example: 10
-    archiveId:
-      name: archiveId
-      in: path
-      required: true
-      schema:
-        type: integer
-      example: 3
+#   parameters:
+#     teamId:
+#       name: teamId
+#       in: path
+#       required: true
+#       schema:
+#         type: integer
+#       example: 1
+#     taskId:
+#       name: taskId
+#       in: path
+#       required: true
+#       schema:
+#         type: integer
+#       example: 5
+#     commentId:
+#       name: commentId
+#       in: path
+#       required: true
+#       schema:
+#         type: integer
+#       example: 10
+#     archiveId:
+#       name: archiveId
+#       in: path
+#       required: true
+#       schema:
+#         type: integer
+#       example: 3
 
   responses:
     Unauthorized:
@@ -1434,76 +1434,76 @@ components:
             meta: null
             error: 이미 존재하는 리소스입니다
 
-  schemas:
-    # ── 공통 응답 래퍼 ──
-    # 모든 API 응답은 아래 포맷을 따릅니다.
-    # { "success": true/false, "data": {...} 또는 [...], "meta": {...} 또는 null, "error": null 또는 "메시지" }
+#   schemas:
+#     # ── 공통 응답 래퍼 ──
+#     # 모든 API 응답은 아래 포맷을 따릅니다.
+#     # { "success": true/false, "data": {...} 또는 [...], "meta": {...} 또는 null, "error": null 또는 "메시지" }
 
-    SuccessResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          description: 실제 응답 데이터 (단일 객체 또는 배열)
-        meta:
-          nullable: true
-          description: 페이지네이션 등 메타 정보 (없을 경우 null)
-          type: object
-          properties:
-            total_count:
-              type: integer
-              example: 100
-            page:
-              type: integer
-              example: 1
-            limit:
-              type: integer
-              example: 10
-            total_pages:
-              type: integer
-              example: 10
-        error:
-          nullable: true
-          example: null
+#     SuccessResponse:
+#       type: object
+#       properties:
+#         success:
+#           type: boolean
+#           example: true
+#         data:
+#           description: 실제 응답 데이터 (단일 객체 또는 배열)
+#         meta:
+#           nullable: true
+#           description: 페이지네이션 등 메타 정보 (없을 경우 null)
+#           type: object
+#           properties:
+#             total_count:
+#               type: integer
+#               example: 100
+#             page:
+#               type: integer
+#               example: 1
+#             limit:
+#               type: integer
+#               example: 10
+#             total_pages:
+#               type: integer
+#               example: 10
+#         error:
+#           nullable: true
+#           example: null
 
-    MessageResponse:
-      type: object
-      description: 메시지만 반환하는 성공 응답
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: object
-          properties:
-            message:
-              type: string
-              example: 성공적으로 처리되었습니다.
-        meta:
-          nullable: true
-          example: null
-        error:
-          nullable: true
-          example: null
+#     MessageResponse:
+#       type: object
+#       description: 메시지만 반환하는 성공 응답
+#       properties:
+#         success:
+#           type: boolean
+#           example: true
+#         data:
+#           type: object
+#           properties:
+#             message:
+#               type: string
+#               example: 성공적으로 처리되었습니다.
+#         meta:
+#           nullable: true
+#           example: null
+#         error:
+#           nullable: true
+#           example: null
 
-    ErrorResponse:
-      type: object
-      description: 에러 응답
-      properties:
-        success:
-          type: boolean
-          example: false
-        data:
-          nullable: true
-          example: null
-        meta:
-          nullable: true
-          example: null
-        error:
-          type: string
-          example: 오류가 발생했습니다.
+#     ErrorResponse:
+#       type: object
+#       description: 에러 응답
+#       properties:
+#         success:
+#           type: boolean
+#           example: false
+#         data:
+#           nullable: true
+#           example: null
+#         meta:
+#           nullable: true
+#           example: null
+#         error:
+#           type: string
+#           example: 오류가 발생했습니다.
 
     # ── 유저 ──
     UserResponse:
@@ -1579,155 +1579,155 @@ components:
               items:
                 $ref: "#/components/schemas/TeamMember"
 
-    # ── 태스크 ──
-    Task:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 5
-        task_number:
-          type: integer
-          example: 5
-        team_id:
-          type: integer
-          example: 1
-        title:
-          type: string
-          example: 홈이요 API 추가
-        content:
-          type: string
-          example: 홈이요 API 추가해주세요.
-        status:
-          type: string
-          enum: [Todo, Doing, Done, Checked]
-          example: Todo
-        requester_id:
-          type: integer
-          example: 1
-        worker_id:
-          type: integer
-          nullable: true
-          example: 2
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-13T11:14:00Z"
+#     # ── 태스크 ──
+#     Task:
+#       type: object
+#       properties:
+#         id:
+#           type: integer
+#           example: 5
+#         task_number:
+#           type: integer
+#           example: 5
+#         team_id:
+#           type: integer
+#           example: 1
+#         title:
+#           type: string
+#           example: 홈이요 API 추가
+#         content:
+#           type: string
+#           example: 홈이요 API 추가해주세요.
+#         status:
+#           type: string
+#           enum: [Todo, Doing, Done, Checked]
+#           example: Todo
+#         requester_id:
+#           type: integer
+#           example: 1
+#         worker_id:
+#           type: integer
+#           nullable: true
+#           example: 2
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2026-03-13T11:14:00Z"
 
-    TaskWithCommentCount:
-      allOf:
-        - $ref: "#/components/schemas/Task"
-        - type: object
-          properties:
-            comment_count:
-              type: integer
-              example: 3
+#     TaskWithCommentCount:
+#       allOf:
+#         - $ref: "#/components/schemas/Task"
+#         - type: object
+#           properties:
+#             comment_count:
+#               type: integer
+#               example: 3
 
-    TaskDetail:
-      allOf:
-        - $ref: "#/components/schemas/Task"
-        - type: object
-          properties:
-            requester:
-              $ref: "#/components/schemas/UserResponse"
-            worker:
-              $ref: "#/components/schemas/UserResponse"
-            comments:
-              type: array
-              items:
-                $ref: "#/components/schemas/Comment"
+#     TaskDetail:
+#       allOf:
+#         - $ref: "#/components/schemas/Task"
+#         - type: object
+#           properties:
+#             requester:
+#               $ref: "#/components/schemas/UserResponse"
+#             worker:
+#               $ref: "#/components/schemas/UserResponse"
+#             comments:
+#               type: array
+#               items:
+#                 $ref: "#/components/schemas/Comment"
 
-    # ── 댓글 ──
-    Comment:
-      type: object
-      properties:
-        uuid:
-          type: integer
-          example: 10
-        task_id:
-          type: integer
-          example: 5
-        content:
-          type: string
-          example: 네, 확인했습니다!
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-13T11:15:00Z"
-        user:
-          $ref: "#/components/schemas/UserResponse"
+#     # ── 댓글 ──
+#     Comment:
+#       type: object
+#       properties:
+#         uuid:
+#           type: integer
+#           example: 10
+#         task_id:
+#           type: integer
+#           example: 5
+#         content:
+#           type: string
+#           example: 네, 확인했습니다!
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2026-03-13T11:15:00Z"
+#         user:
+#           $ref: "#/components/schemas/UserResponse"
 
-    # ── 아카이브 ──
-    Archive:
-      type: object
-      properties:
-        uuid:
-          type: integer
-          example: 1
-        team_id:
-          type: integer
-          example: 1
-        type:
-          type: string
-          enum: [LINK, NOTE, PDF]
-          example: NOTE
-        title:
-          type: string
-          example: 주간 회의록 (03.11)
-        content:
-          type: string
-          nullable: true
-          example: "## 결정 사항\n- MVP 기능 확정"
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-11T10:00:00Z"
+#     # ── 아카이브 ──
+#     Archive:
+#       type: object
+#       properties:
+#         uuid:
+#           type: integer
+#           example: 1
+#         team_id:
+#           type: integer
+#           example: 1
+#         type:
+#           type: string
+#           enum: [LINK, NOTE, PDF]
+#           example: NOTE
+#         title:
+#           type: string
+#           example: 주간 회의록 (03.11)
+#         content:
+#           type: string
+#           nullable: true
+#           example: "## 결정 사항\n- MVP 기능 확정"
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2026-03-11T10:00:00Z"
 
-    ArchiveSummary:
-      type: object
-      properties:
-        uuid:
-          type: integer
-          example: 1
-        type:
-          type: string
-          enum: [LINK, NOTE, PDF]
-          example: NOTE
-        title:
-          type: string
-          example: 주간 회의록 (03.11)
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-11T10:00:00Z"
+#     ArchiveSummary:
+#       type: object
+#       properties:
+#         uuid:
+#           type: integer
+#           example: 1
+#         type:
+#           type: string
+#           enum: [LINK, NOTE, PDF]
+#           example: NOTE
+#         title:
+#           type: string
+#           example: 주간 회의록 (03.11)
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2026-03-11T10:00:00Z"
 
-    # ── 로그 ──
-    Log:
-      type: object
-      properties:
-        uuid:
-          type: integer
-          example: 1
-        team_id:
-          type: integer
-          example: 1
-        user_id:
-          type: integer
-          example: 2
-        task_id:
-          type: integer
-          nullable: true
-          example: 5
-        action_type:
-          type: string
-          enum: [CREATE, MOVE, DELETE, UPDATE]
-          example: MOVE
-        message:
-          type: string
-          example: 영아 #5 상태 변경(Done)
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-13T11:15:00Z"
-        user:
-          $ref: "#/components/schemas/UserResponse"
+#     # ── 로그 ──
+#     Log:
+#       type: object
+#       properties:
+#         uuid:
+#           type: integer
+#           example: 1
+#         team_id:
+#           type: integer
+#           example: 1
+#         user_id:
+#           type: integer
+#           example: 2
+#         task_id:
+#           type: integer
+#           nullable: true
+#           example: 5
+#         action_type:
+#           type: string
+#           enum: [CREATE, MOVE, DELETE, UPDATE]
+#           example: MOVE
+#         message:
+#           type: string
+#           example: 영아 #5 상태 변경(Done)
+#         created_at:
+#           type: string
+#           format: date-time
+#           example: "2026-03-13T11:15:00Z"
+#         user:
+#           $ref: "#/components/schemas/UserResponse"
