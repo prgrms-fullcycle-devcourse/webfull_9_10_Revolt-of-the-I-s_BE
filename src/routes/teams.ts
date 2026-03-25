@@ -1,20 +1,34 @@
-import express from "express";
-
+import express from 'express';
+import {
+  getAllTeams,
+  createTeam,
+  joinTeam,
+  leaveTeam,
+  updatePosition,
+  getActiveMembers,
+} from '../services/teamService';
+ 
 const router: import("express").Router = express.Router();
 
 // GET
-router.get("/", () => {});
-router.get("/:teamId/members/active", () => {});
+// 팀 목록 전체 조회 
+router.get('/', getAllTeams);
+
+// 홣동 중인 팀원 목록
+router.get('/:teamId/members/active', getActiveMembers);
 
 // POST
-router.post("/", () => {});
-router.post("/:teamId/members", () => {});
+// 팀 생성
+router.post('/', createTeam);
+
+// 팀 가입/입장
+router.post('/:teamId/members', joinTeam);
 
 // PATCH
-router.patch("/:teamId/members/me/position", () => {});
+// 팀내 포지션 수정 
+router.patch('/:teamId/members/me/position', updatePosition);
 
-// DELETE
-router.delete("/:teamId", () => {});
-router.delete("/:teamId/members/me", () => {});
+// 팀 탈퇴
+router.delete('/:teamId/members/me', leaveTeam);
 
 export default router;
