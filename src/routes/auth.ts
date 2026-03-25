@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import catchAsync from "../utils/error";
+import catchAsync from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
 

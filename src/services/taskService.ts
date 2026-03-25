@@ -12,8 +12,9 @@ import {
   deleteCommentById,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
-import pool from "../config/db";
-import { insertLog } from "../repositories/logRepository";
+import { findLogsByTeam, insertLog } from "../repositories/logRepository";
+import { ERROR, SUCCESS } from "../utils/response";
+import { isValidId, isValidString } from "../utils/validators";
 
 interface TaskQuantity {
   Todo: number;
@@ -42,25 +43,17 @@ const getTasksByTeam = async (req: Request, res: Response) => {
   try {
     const { teamId } = req.params;
 
-    if (!teamId || isNaN(Number(teamId))) {
-      return res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ success: false, error: "유효하지 않은 teamId입니다." });
+    if (!isValidId(teamId)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
     const data = await getTeamTasksData(Number(teamId));
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data,
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("테스크 조회 오류: ", error);
-    res
+    res.status(StatusCodes.OK).json(SUCCESS(data));
+  } catch (err) {
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ success: false, error: "서버 오류가 발생했습니다." });
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -71,31 +64,21 @@ const createTask = async (req: Request, res: Response) => {
     const { title, content, worker_id } = req.body;
 
     if (
-      !teamId ||
-      isNaN(Number(teamId)) ||
-      !title ||
-      typeof title !== "string" ||
-      title.trim() === "" ||
-      !content ||
-      typeof content !== "string" ||
-      content.trim() === ""
+      !isValidId(teamId) ||
+      !isValidString(title) ||
+      !isValidString(content)
     ) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "오류가 발생했습니다.",
-      });
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
-    const requesterId = 1; // TODO: req.user.id로 교체
+    const requesterId = "1"; // TODO: req.user.id로 교체
 
     const task = await insertTask({
       teamId: Number(teamId),
       title: title.trim(),
       content: content.trim(),
       requesterId,
-      workerId: worker_id ? Number(worker_id) : null,
+      workerId: worker_id ? String(worker_id) : null,
     });
 
     await insertLog({
@@ -117,20 +100,11 @@ const createTask = async (req: Request, res: Response) => {
       console.log(`✅ User ${task.worker_id}에게 알림 전송 완료!`);
     }
 
-    res.status(StatusCodes.CREATED).json({
-      success: true,
-      data: task,
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("테스크 생성 오류: ", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "서버 오류가 발생했습니다.",
-    });
+    res.status(StatusCodes.CREATED).json(SUCCESS(task));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -139,40 +113,21 @@ const getTaskDetail = async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
 
-    if (!taskId || isNaN(Number(taskId))) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "유효하지 않은 taskId입니다.",
-      });
+    if (!isValidId(taskId)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
     const task = await findTaskById(Number(taskId));
 
     if (!task) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "요청한 리소스를 찾을 수 없습니다",
-      });
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: task,
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("테스크 상세 조회 오류: ", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "서버 오류가 발생했습니다.",
-    });
+    res.status(StatusCodes.OK).json(SUCCESS(task));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -181,54 +136,32 @@ const deleteTask = async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
 
-    if (!taskId || isNaN(Number(taskId))) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "유효하지 않은 taskId입니다.",
-      });
+    if (!isValidId(taskId)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
     const task = await findTaskById(Number(taskId));
 
     if (!task) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "요청한 리소스를 찾을 수 없습니다",
-      });
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    const requesterId = 1; // TODO: req.user.id로 교체
+    const requesterId = "1"; // TODO: req.user.id로 교체
 
     // 요청자 본인만 삭제 가능
     if (task.requester_id !== requesterId) {
-      return res.status(StatusCodes.FORBIDDEN).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "해당 작업에 대한 권한이 없습니다",
-      });
+      return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
     }
 
     await deleteTaskById(Number(taskId));
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: { message: "성공적으로 삭제되었습니다." },
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("테스크 삭제 오류: ", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "서버 오류가 발생했습니다.",
-    });
+    res
+      .status(StatusCodes.OK)
+      .json(SUCCESS({ message: "성공적으로 삭제되었습니다." }));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -241,54 +174,26 @@ const createComment = async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const { content } = req.body;
 
-    if (!taskId || isNaN(Number(taskId))) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "유효하지 않은 taskId입니다.",
-      });
-    }
-
-    if (!content || typeof content !== "string" || content.trim() === "") {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "오류가 발생했습니다.",
-      });
+    if (!isValidId(taskId) || !isValidString(content)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
     const exists = await existsTaskById(Number(taskId));
     if (!exists) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "요청한 리소스를 찾을 수 없습니다",
-      });
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    const userId = 1; // TODO: req.user.id로 교체
+    const userId = "1"; // TODO: req.user.id로 교체
 
     const comment = await insertComment(Number(taskId), userId, content.trim());
 
     await pusher.trigger(`task-${taskId}`, "new-comment", comment);
 
-    res.status(StatusCodes.CREATED).json({
-      success: true,
-      data: comment,
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("댓글 작성 오류: ", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "서버 오류가 발생했습니다.",
-    });
+    res.status(StatusCodes.CREATED).json(SUCCESS(comment));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -298,62 +203,29 @@ const updateComment = async (req: Request, res: Response) => {
     const { commentId } = req.params;
     const { content } = req.body;
 
-    if (!commentId || isNaN(Number(commentId))) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "유효하지 않은 commentId입니다.",
-      });
-    }
-
-    if (!content || typeof content !== "string" || content.trim() === "") {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "오류가 발생했습니다.",
-      });
+    if (!isValidId(commentId) || !isValidString(content)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
     const comment = await existsCommentById(Number(commentId));
     if (!comment) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "요청한 리소스를 찾을 수 없습니다",
-      });
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    const userId = 1; // TODO: req.user.id로 교체
+    const userId = "1"; // TODO: req.user.id로 교체
 
     // 작성자 본인만 수정 가능
     if (comment.user_id !== userId) {
-      return res.status(StatusCodes.FORBIDDEN).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "해당 작업에 대한 권한이 없습니다",
-      });
+      return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
     }
 
     const updated = await updateCommentById(Number(commentId), content.trim());
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: updated,
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("댓글 수정 오류: ", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "서버 오류가 발생했습니다.",
-    });
+    res.status(StatusCodes.OK).json(SUCCESS(updated));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -362,57 +234,51 @@ const deleteComment = async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
 
-    if (!commentId || isNaN(Number(commentId))) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "유효하지 않은 commentId입니다.",
-      });
+    if (!isValidId(commentId)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
     }
 
     const comment = await existsCommentById(Number(commentId));
     if (!comment) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "요청한 리소스를 찾을 수 없습니다",
-      });
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    const userId = 1; // TODO: req.user.id로 교체
+    const userId = "1"; // TODO: req.user.id로 교체
 
     if (comment.user_id !== userId) {
-      return res.status(StatusCodes.FORBIDDEN).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "해당 작업에 대한 권한이 없습니다",
-      });
+      return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
     }
 
     await deleteCommentById(Number(commentId));
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: { message: "성공적으로 처리되었습니다." },
-      meta: null,
-      error: null,
-    });
-  } catch (error) {
-    console.error("댓글 삭제 오류: ", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "서버 오류가 발생했습니다.",
-    });
+    res
+      .status(StatusCodes.OK)
+      .json(SUCCESS({ message: "성공적으로 삭제되었습니다." }));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
   }
 };
 
 // 팀 활동 로그 조회
-const getTeamLogs = (req: Request, res: Response) => {};
+const getTeamLogs = async (req: Request, res: Response) => {
+  try {
+    const { teamId } = req.params;
+
+    if (!isValidId(teamId)) {
+      return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
+    }
+
+    const logs = await findLogsByTeam(Number(teamId));
+
+    res.status(StatusCodes.OK).json(SUCCESS(logs));
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(ERROR.INTERNAL_SERVER_ERROR);
+  }
+};
 
 export {
   getTeamTasksData,
