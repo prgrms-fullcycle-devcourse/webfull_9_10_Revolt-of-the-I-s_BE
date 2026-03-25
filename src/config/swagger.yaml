@@ -348,8 +348,6 @@ paths:
                   summary: 이름 길이 오류
                   value:
                     success: false
-                    data: null
-                    meta: null
                     error: "팀 이름은 2자 이상 30자 이하로 입력해주세요."
                 pinError:
                   summary: 핀 번호 형식 오류
@@ -467,25 +465,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
-        "400":
-          description: 팀장은 탈퇴할 수 없습니다.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: 해당 team의 멤버가 아님
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
-                success: false
-                data: null
-                meta: null
-                error: "팀장은 팀을 탈퇴할 수 없습니다. 팀 삭제를 이용하세요."
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          description: 해당 team의 멤버가 아님
-          $ref: "#/components/responses/NotFound"
+                  success: false
+                  error: "해당 작업에 대한 권한이 없습니다"
         "404":
           description: 해당 team이 없을 떄
-          $ref: "#/components/responses/NotFound"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                  success: false
+                  error: "요청한 리소스를 찾을 수 없습니다"
 
   /teams/{teamId}/members/me/position:
     patch:
@@ -562,10 +561,22 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: 해당 team의 멤버가 아님
-          $ref: "#/components/responses/NotFound"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                  success: false
+                  error: "해당 작업에 대한 권한이 없습니다"
         "404":
           description: 해당 team이 없을 떄
-          $ref: "#/components/responses/NotFound"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                  success: false
+                  error: "요청한 리소스를 찾을 수 없습니다"
 
   /teams/{teamId}/members/active:
     get:
@@ -1348,6 +1359,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: 중복된 리소스 
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"            
 
   schemas:
     SuccessResponse:
@@ -1388,6 +1405,7 @@ components:
           example: false
         error:
           type: string
+          example: "오류가 발생했습니다."
 
     UserResponse:
       type: object
