@@ -19,7 +19,7 @@ import {
 // GET /teams - 팀 목록 전체 조회
 export const getAllTeams = catchAsync(async(req: Request, res: Response) => {
     // 우선 userId 임의로 받음
-    const userId = req.body.userId;
+    const userId = req.user!.uuid;
     const rows = await findAllWithMembers(userId);
 
     const teamsMap = rows.reduce((acc: any, row: any) => {
@@ -63,7 +63,8 @@ export const getAllTeams = catchAsync(async(req: Request, res: Response) => {
 // POST /teams - 팀 생성
 export const createTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // 우선 owner_id 임의로 받음
-    const {name, pin_password, owner_id} = req.body
+    const {name, pin_password} = req.body;
+    const owner_id = req.user!.uuid;
     
     // 팀 이름 길이 검증 (2자 이상 30자 이하)
     if (!name || name.trim().length < 2 || name.trim().length > 30) {
@@ -117,7 +118,7 @@ export const createTeam = catchAsync(async (req: Request, res: Response, next: N
 // DELETE /teams/:teamId/members/me - 팀 탈퇴
 export const leaveTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     //임의로 userId
-    const {userId} = req.body;
+    const userId = req.user!.uuid;
     const teamId = parseInt(req.params.teamId as string);
     
     const team = await findTeamByTeamId(teamId);
@@ -129,15 +130,7 @@ export const leaveTeam = catchAsync(async (req: Request, res: Response, next: Ne
     if(!member){
         return res.status(403).json(ERROR.FORBIDDEN)
     }
-    
-    if(team.owner_id === userId){
-        return res.status(400).json({
-            success: false,
-            data: null,
-            meta: null,
-            error: "팀장은 팀을 탈퇴할 수 없습니다. 팀 삭제를 이용하세요."
-        })
-    }
+
     
     await deleteTeamMember(teamId, userId);
     
@@ -162,7 +155,7 @@ export const leaveTeam = catchAsync(async (req: Request, res: Response, next: Ne
 // POST /teams/:teamId/members - 팀 가입 / 입장
 export const joinTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // 우선 userId 임의로 받음
-    const userId = req.body.userId;
+    const userId = req.user!.uuid;
     const teamId = parseInt(req.params.teamId as string);
     const {password} = req.body;
 
@@ -228,7 +221,8 @@ export const joinTeam = catchAsync(async (req: Request, res: Response, next: Nex
  
 // PATCH /teams/:teamId/members/me/position - 포지션 수정
 export const updatePosition = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const {userId, position} = req.body;
+    const {position} = req.body;
+    const userId = req.user!.uuid;
     const teamId = parseInt(req.params.teamId as string);
 
     if (!position || position.trim().length === 0) {
