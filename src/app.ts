@@ -9,7 +9,7 @@ const app: Express = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", // 로컬 프론트엔드 개발 주소
+      "http://localhost:5173", // 로컬 프론트엔드 개발 주소
       "https://i-station.onrender.com", // 백엔드 배포 주소
     ],
     credentials: true,
