@@ -2,21 +2,18 @@ import { Router, Request, Response, NextFunction } from "express";
 import catchAsync from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
+import { validate } from "../utils/validators";
 
 const router: Router = Router();
 
 const signupSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다."),
-  nickname: z.string().min(2, "닉네임은 최소 2글자 이상이어야 합니다."),
+  name: z.string().min(1, "이름은 필수입니다."),
+  phone: z.string().min(10, "전화번호 형식이 올바르지 않습니다."),
   password: z.string().min(8, "비밀번호는 8자 이상이어야 합니다.")
     .regex(/[a-zA-Z]/, "영문자가 포함되어야 합니다.")
     .regex(/[0-9]/, "숫자가 포함되어야 합니다."),
 });
-
-interface ServiceError {
-  statusCode: number;
-  message: string;
-}
 
 class AppError extends Error {
   constructor(public statusCode: number, public message: string) {
@@ -26,12 +23,10 @@ class AppError extends Error {
 }
 
 // --- [회원가입] ---
-router.post("/signup", catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
+router.post("/signup", 
+  validate(signupSchema),
+  catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
     const userData = req.body;
-
-    if (!userData.email || !userData.password || !userData.name || !userData.phone) {
-      throw new AppError(400, "필수 값 누락 또는 형식이 올바르지 않습니다.");
-    }
 
     const result = await userService.signup(userData);
 
