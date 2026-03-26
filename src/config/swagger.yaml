@@ -250,66 +250,66 @@ paths:
   # # 2. Users
   # # ──────────────────────────────────────────
 
-  # /users/me:
-  #   get:
-  #     tags: [Users]
-  #     summary: 로그인 유저 정보 조회
-  #     security:
-  #       - BearerAuth: []
-  #     responses:
-  #       "200":
-  #         description: 내 정보 반환
-  #         content:
-  #           application/json:
-  #             schema:
-  #               allOf:
-  #                 - $ref: "#/components/schemas/SuccessResponse"
-  #                 - type: object
-  #                   properties:
-  #                     data:
-  #                       $ref: "#/components/schemas/UserResponse"
-  #                     meta:
-  #                       nullable: true
-  #                       example: null
-  #       "401":
-  #         $ref: "#/components/responses/Unauthorized"
+  /users/me:
+    get:
+      tags: [Users]
+      summary: 로그인 유저 정보 조회
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 내 정보 반환
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponse"
+                      meta:
+                        nullable: true
+                        example: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
-  # /users/me/status:
-  #   patch:
-  #     tags: [Users]
-  #     summary: 내 상태 업데이트
-  #     description: |
-  #       내 배지 상태(💻 개발 중, ☕ 휴식 중, 🗣 회의 중)를 변경하고 Pusher로 실시간 전송합니다.
-  #       자리비움(⛔️)은 사용자가 임의로 선택할 수 없습니다.
-  #     security:
-  #       - BearerAuth: []
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             required: [status]
-  #             properties:
-  #               status:
-  #                 type: string
-  #                 enum: ["업무 중", "회의 중", "쉬는 중"]
-  #                 example: 업무 중
-  #     responses:
-  #       "200":
-  #         description: 상태 변경 성공
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/MessageResponse"
-  #       "400":
-  #         description: 잘못된 상태값 (자리비움 직접 선택 불가)
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/ErrorResponse"
-  #       "401":
-  #         $ref: "#/components/responses/Unauthorized"
+  /users/me/status:
+    patch:
+      tags: [Users]
+      summary: 내 상태 업데이트
+      description: |
+        내 배지 상태(💻 개발 중, ☕ 휴식 중, 🗣 회의 중)를 변경하고 Pusher로 실시간 전송합니다.
+        자리비움(⛔️)은 사용자가 임의로 선택할 수 없습니다.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: ["업무 중", "회의 중", "쉬는 중"]
+                  example: 업무 중
+      responses:
+        "200":
+          description: 상태 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: 잘못된 상태값 (자리비움 직접 선택 불가)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   # # ──────────────────────────────────────────
   # # 3. Teams (팀 로비)
