@@ -7,8 +7,11 @@ import {
   updatePosition,
   getActiveMembers,
 } from '../services/teamService';
+import {authMiddleware} from "../utils/auth";
  
 const router: import("express").Router = express.Router();
+
+router.use(authMiddleware);
 
 // GET
 // 팀 목록 전체 조회 
