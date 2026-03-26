@@ -1,7 +1,7 @@
 import pool from '../config/db';
 
 //팀 목록 전체 조회 (팀 목록 포함)
-export const findAllWithMembers = async (currentUserId: number) => {
+export const findAllWithMembers = async (currentUserId: string) => {
     const sql = `
         SELECT 
             t.id AS team_id, 

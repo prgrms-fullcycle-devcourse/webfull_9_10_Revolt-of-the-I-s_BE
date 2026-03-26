@@ -338,7 +338,7 @@ paths:
                         nullable: true
                         example: null
         "400":
-          description: 입력값 유효성 검사 실패 (이름 길이 또는 핀 번호 형식 오류)
+          description: 입력값 유효성 검사 실패 
           content:
             application/json:
               schema:
@@ -355,6 +355,8 @@ paths:
                   summary: 핀 번호 형식 오류
                   value:
                     success: false
+                    data: null
+                    meta: null
                     error: "핀 번호는 6자리 숫자여야 합니다."
         "409":
           description: 이름 중복
@@ -372,7 +374,7 @@ paths:
         비밀번호 오기입 시 반려됩니다.
 
         **[로직 가이드]**
-        1. **기존 멤버 (`isMember: true`)**: `password` 없이 호출해도 입장 성공.
+        1. **기존 멤버 (`isMember: true`)**: `password` 존재유무 상관없이 호출해도 입장 성공.
         2. **신규 유저 (`isMember: false`)**: 반드시 6자리 `password`를 포함해야 함.
       security:
         - BearerAuth: []
@@ -418,23 +420,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              examples:
-                missing_password:
-                  summary: 비밀번호 누락
+              example:
                   value:
                     success: false
                     data: null
                     meta: null
-                    error: "비밀번호가 필요합니다."
-                invalid_format:
-                  summary: 형식 오류
-                  value:
-                    success: false
-                    data: null
-                    meta: null
-                    error: "핀 번호는 6자리 숫자여야 합니다."
+                    error: "올바른 6자리 핀 번호를 입력해주세요."
         "401":
-          description: 인증 토큰이 없거나 유요하지 않음
+          description: 인증 토큰이 없거나 유효하지 않음
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: 비밀번호 불일치
@@ -446,7 +439,7 @@ paths:
                 success: false
                 data: null
                 meta: null
-                error: "비밀번호가 올바르지 않습니다."
+                error: "해당 작업에 대한 권한이 없습니다"
         "404":
           description: 해당하는 팀 없음
           $ref: "#/components/responses/NotFound"
@@ -467,22 +460,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
-        "400":
-          description: 팀장은 탈퇴할 수 없습니다.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                data: null
-                meta: null
-                error: "팀장은 팀을 탈퇴할 수 없습니다. 팀 삭제를 이용하세요."
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: 해당 team의 멤버가 아님
-          $ref: "#/components/responses/NotFound"
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: 해당 team이 없을 떄
           $ref: "#/components/responses/NotFound"
@@ -538,31 +520,22 @@ paths:
                     nullable: true
                     example: null
         "400":
-          description: 잘못된 요청 (포지션 검증 실패)
+          description: 잘못된 요청 (포지션 누락 또는 길이 초과)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
-                empty_position:
-                  summary: 포지션 누락
-                  value:
-                    success: false
-                    data: null
-                    meta: null
-                    error: "포지션을 입력해주세요."
-                too_long:
-                  summary: 길이 초과
-                  value:
-                    success: false
-                    data: null
-                    meta: null
-                    error: "포지션은 20자 이내로 입력해주세요."
+                value:
+                  success: false
+                  data: null
+                  meta: null
+                  error: "포지션은 1~20자 이내로 입력해주세요."
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: 해당 team의 멤버가 아님
-          $ref: "#/components/responses/NotFound"
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: 해당 team이 없을 떄
           $ref: "#/components/responses/NotFound"
@@ -1331,23 +1304,83 @@ components:
 
   responses:
     Unauthorized:
-      description: 인증 오류
+      description: 인증 토큰이 없거나 유효하지 않음
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            meta: null
+            error: "인증 토큰이 없거나 유효하지 않습니다" 
+
     Forbidden:
-      description: 권한 오류
+      description: 권한 없음 (팀 멤버가 아님 등)
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            meta: null
+            error: "해당 작업에 대한 권한이 없습니다" 
+
     NotFound:
-      description: 리소스 없음
+      description: 요청한 리소스를 찾을 수 없음
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            meta: null
+            error: "요청한 리소스를 찾을 수 없습니다" 
+
+    Conflict:
+      description: 중복된 리소스 (팀 이름 중복 등)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            meta: null
+            error: "이미 존재하는 리소스입니다"
+
+    BadRequest:
+      description: 유효성 검사 실패 또는 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            meta: "오류가 발생했습니다"
+    InternalServerError:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error: "서버 오류가 발생했습니다."
+    InvalidId:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            meta: null
+            error: "오류가 발생했습니다"
+
+
 
   schemas:
     SuccessResponse:
@@ -1388,6 +1421,7 @@ components:
           example: false
         error:
           type: string
+          example: "오류가 발생했습니다."
 
     UserResponse:
       type: object
