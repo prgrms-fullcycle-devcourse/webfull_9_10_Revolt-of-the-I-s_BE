@@ -57,16 +57,29 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
 
       return res.status(200).json({
         success: true,
+        data: {
+          token: result.token,
+          user: {
+            uuid: result.user.uuid,
+            name: result.user.name,
+            profile_image: null
+          },
+          meta: null,
+        },
         error: null,
       });
     }
 
-    throw new AppError(401, "로그인 실패.");
+    throw new AppError(401, "오류가 발생했습니다.");
   }),
 );
 
 // --- [로그아웃] ---
 router.post("/logout", catchAsync(async (req: Request, res: Response) => {
+    const token = req.cookies.accessToken
+    if (!token) {
+        throw new AppError(400, "인증 정보가 없습니다.");
+    }
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: true,
@@ -99,5 +112,7 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
     return res.status(401).json({ message: "구글 로그인 실패" });
   }),
 );
+
+
 
 export default router;

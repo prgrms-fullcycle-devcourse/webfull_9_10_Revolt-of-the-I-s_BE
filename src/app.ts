@@ -12,6 +12,7 @@ app.use(
       "http://localhost:5173", // 로컬 프론트엔드 개발 주소
       "https://i-station.onrender.com", // 백엔드 배포 주소
     ],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );

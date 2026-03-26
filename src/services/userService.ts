@@ -40,16 +40,16 @@ export const signup = async (userData: any): Promise<string> => {
 };
 
 // --- [로그인 로직] ---
-export const login = async (loginData: any): Promise<{ token: string } | ServiceError> => {
+export const login = async (loginData: any): Promise<{ token: string; user: any } | ServiceError> => {
     const user = await userRepo.findUserByEmail(loginData.email);
     if (!user) {
-        return { statusCode: 401, message: "이메일 또는 비밀번호가 일치하지 않습니다." };
+        throw new AppError(401, "이메일 또는 비밀번호가 일치하지 않습니다");
     }
 
  
     const isMatch = await bcrypt.compare(loginData.password, user.password!);
     if (!isMatch) {
-        return { statusCode: 401, message: "이메일 또는 비밀번호가 일치하지 않습니다." };
+        throw new AppError(401, "이메일 또는 비밀번호가 일치하지 않습니다");
     }
 
     const token = jwt.sign(
@@ -58,7 +58,7 @@ export const login = async (loginData: any): Promise<{ token: string } | Service
         { expiresIn: '1h' }
     );
 
-    return { token };
+    return { token, user };
 };
 
 // --- [구글 로그인] ---
@@ -106,4 +106,14 @@ export const googleLogin = async (idToken: string): Promise<{ token: string }> =
     );
 
     return { token };
+};
+
+// 상태 수정
+export const status = async (userData: any, status: Enumerator): Promise<{ user: any } | ServiceError> => {
+    const user = await userRepo.patchByEmail(userData, status);
+    if (!user) {
+        throw new AppError(400, "잘못된 입력입니다.");
+    }
+
+    return { user }
 };

@@ -1,4 +1,11 @@
 import { Request, Response, NextFunction } from "express";
+import { ZodError, ZodIssue } from 'zod';
+
+export enum UserStatus {
+  ACTIVE = '업무 중',
+  REST = '휴식 중',  
+  AWAY = '자리비움'
+}
 
 // ID 유효성 검사
 // teamId, taskId, commentId
@@ -19,10 +26,21 @@ export const validate = (schema: any) => {
       await schema.parseAsync(req.body);
       next();
     } catch (error) {
+      if (error instanceof ZodError) {
+       
+        const errorMessage = error.issues
+          .map((issue: ZodIssue) => `${issue.path.join('.')}: ${issue.message}`)
+          .join(', ');
+
+        const customError: any = new Error(errorMessage);
+        customError.statusCode = 400;
+        
+        return next(customError);
+      }
       next(error);
     }
   };
-}
+};
 // 팀 이름 유효성 검사 (2자 ~ 30자)
 export const isValidTeamName = (name: any): boolean => {
   if (!isValidString(name)) return false;
