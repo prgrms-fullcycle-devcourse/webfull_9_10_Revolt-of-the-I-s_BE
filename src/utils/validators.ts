@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError, ZodIssue } from 'zod';
 
+export enum UserStatus {
+  ACTIVE = '업무 중',
+  REST = '휴식 중',  
+  AWAY = '자리비움'
+}
+
 // ID 유효성 검사
 // teamId, taskId, commentId
 export const isValidId = (id: string | string[] | undefined): boolean => {
@@ -21,7 +27,7 @@ export const validate = (schema: any) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        // .errors 대신 .issues를 사용하면 타입 추론이 더 정확합니다.
+       
         const errorMessage = error.issues
           .map((issue: ZodIssue) => `${issue.path.join('.')}: ${issue.message}`)
           .join(', ');

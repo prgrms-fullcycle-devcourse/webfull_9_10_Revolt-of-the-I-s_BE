@@ -107,3 +107,13 @@ export const googleLogin = async (idToken: string): Promise<{ token: string }> =
 
     return { token };
 };
+
+// 상태 수정
+export const status = async (userData: any, status: Enumerator): Promise<{ user: any } | ServiceError> => {
+    const user = await userRepo.patchByEmail(userData, status);
+    if (!user) {
+        throw new AppError(400, "잘못된 입력입니다.");
+    }
+
+    return { user }
+};

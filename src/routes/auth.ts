@@ -76,7 +76,7 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
 
 // --- [로그아웃] ---
 router.post("/logout", catchAsync(async (req: Request, res: Response) => {
-    const token = req.cookies.accessToken || req.headers.authorization?.split(' ')[1];
+    const token = req.cookies.accessToken
     if (!token) {
         throw new AppError(400, "인증 정보가 없습니다.");
     }
