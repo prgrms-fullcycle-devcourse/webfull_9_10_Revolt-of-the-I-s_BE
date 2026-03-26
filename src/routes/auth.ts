@@ -50,8 +50,8 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
     if ("token" in result) {
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 3600000,
       });
 
@@ -76,13 +76,14 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
 
 // --- [로그아웃] ---
 router.post("/logout", catchAsync(async (req: Request, res: Response) => {
-    const token = req.cookies.accessToken || req.headers.authorization?.split(' ')[1];
+    const token = req.cookies.accessToken
     if (!token) {
         throw new AppError(400, "인증 정보가 없습니다.");
     }
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
+      sameSite: "none",
     });
 
     return res.status(200).json({

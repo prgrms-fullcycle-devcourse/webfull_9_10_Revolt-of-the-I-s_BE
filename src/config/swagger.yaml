@@ -280,7 +280,7 @@ paths:
       summary: 내 상태 업데이트
       description: |
         내 배지 상태(💻 개발 중, ☕ 휴식 중, 🗣 회의 중)를 변경하고 Pusher로 실시간 전송합니다.
-        자리비움(⛔️)은 사용자가 임의로 선택할 수 없습니다.
+        자리비움(⛔️)은 사용자가 임의로 선택할 수 없습니다. 미구현 입니다. TEAM API가 정리되는 대로 갱신하겠습니다.
       security:
         - BearerAuth: []
       requestBody:
