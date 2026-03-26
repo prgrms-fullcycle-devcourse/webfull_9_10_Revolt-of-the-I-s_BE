@@ -55,7 +55,7 @@ export const login = async (loginData: any): Promise<{ token: string } | Service
     const token = jwt.sign(
         { id: user.uuid, email: user.email },
         JWT_SECRET!,
-        { expiresIn: '1h' }
+        { expiresIn: '365d' }
     );
 
     return { token };
@@ -102,7 +102,7 @@ export const googleLogin = async (idToken: string): Promise<{ token: string }> =
     const token = jwt.sign(
         { uuid: user!.uuid, email: user!.email },
         process.env.JWT_SECRET!,
-        { expiresIn: '1h' }
+        { expiresIn: '365d' }
     );
 
     return { token };
