@@ -81,6 +81,10 @@ paths:
                             type: string
                             format: uuid
                             example: 123e4567-e89b-12d3-a456-426614174000
+                      meta:
+                        type: array
+                        nullable: true
+                        example: null
                       error:
                         type: object
                         nullable: true
@@ -133,7 +137,7 @@ paths:
     post:
       tags: [Auth]
       summary: 로그인
-      description: JWT 토큰 발급 및 유저 정보(team_id 포함) 반환. 로그인 시 상태가 활동으로 변경됩니다.
+      description: JWT 토큰 발급.
       requestBody:
         required: true
         content:
@@ -171,7 +175,7 @@ paths:
                         nullable: true
                         example: null
         "401":
-          description: 이메일 혹은 비밀번호가 일치하지 않습니다
+          description: 인증 실패 (이메일 또는 비밀번호 불일치)
           content:
             application/json:
               schema:
