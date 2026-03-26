@@ -3,7 +3,6 @@ import catchAsync from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
 import { validate } from "../utils/validators";
-import { profile } from "node:console";
 
 const router: Router = Router();
 
@@ -77,7 +76,7 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
 
 // --- [로그아웃] ---
 router.post("/logout", catchAsync(async (req: Request, res: Response) => {
-    const token = req.cookies.accessToken;
+    const token = req.cookies.accessToken || req.headers.authorization?.split(' ')[1];
     if (!token) {
         throw new AppError(400, "인증 정보가 없습니다.");
     }
@@ -110,5 +109,7 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
     return res.status(401).json({ message: "구글 로그인 실패" });
   }),
 );
+
+
 
 export default router;
