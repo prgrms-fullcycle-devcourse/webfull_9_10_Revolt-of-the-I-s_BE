@@ -40,7 +40,7 @@ router.post("/signup",
       });
     }
     throw new AppError(500, "예기치 못한 오류가 발생했습니다.");
-  }),
+  }), 
 );
 
 // --- [로그인] ---
@@ -50,8 +50,8 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
     if ("token" in result) {
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 3600000,
       });
 
@@ -69,7 +69,8 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
 router.post("/logout", catchAsync(async (req: Request, res: Response) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
+      sameSite: "none",
     });
 
     return res.status(200).json({
@@ -88,6 +89,8 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
     if ("token" in result) {
       res.cookie("accessToken", result.token, {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
         maxAge: 3600000,
       });
       return res.status(200).json({ success: true });
