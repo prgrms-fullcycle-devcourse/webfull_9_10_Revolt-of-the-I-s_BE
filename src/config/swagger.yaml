@@ -934,19 +934,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                data: null
-                meta: null
-                error: "제목은 1~100자 사이로 입력해주세요."                  
+              examples:
+                  invalidTitle:
+                    summary: 제목 길이 제한 위반
+                    value:
+                      success: false
+                      data: null
+                      meta: null
+                      error: "제목은 1~100자 사이로 입력해주세요."
+                  invalidContent:
+                    summary: 본문 누락
+                    value:
+                      success: false
+                      data: null
+                      meta: null
+                      error: "회의록 본문을 입력해주세요."               
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: 해당 팀의 멤버가 아님                         
           $ref: "#/components/responses/Forbidden"
-        "404":
-          description: 해당 archiveId의 회의록이 존재하지 않음
-          $ref: "#/components/responses/NotFound"
 
   /archives/{archiveId}/meeting:
     get:
@@ -1050,7 +1057,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
+                allOf:
+                  - $ref: "#/components/schemas/MessageResponse"
+                  - type: object
+                    properties:
+                      meta:
+                        nullable: true
+                        example: null
+                      error:
+                        nullable: true
+                        example: null
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1091,14 +1107,23 @@ paths:
         "403":                                              
           description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
-        "404":
-          description: 해당 teamId의 팀이 존재하지 않음
-          $ref: "#/components/responses/NotFound"
 
     post:
       tags: [Archives]
       summary: 퀵 링크 생성
-      description: 피그마, API 명세서 등 팀 필수 링크를 등록합니다.
+      description: |
+        피그마, API 명세서 등 팀 필수 링크를 등록합니다.
+
+        **[🚨 URL 유효성 검사 반려 케이스]**
+        1. **점(`.`)이 하나도 없는 경우** (예: `google`, `localhost`)
+           - 도메인 형식(`이름.확장자`)을 갖춰야 합니다.
+        2. **도메인 중간에 공백이 들어간 경우** (예: `http:// google.com`, `google .com`)
+           - URL 도메인 부분에는 공백이 허용되지 않습니다.
+        3. **프로토콜(`http://`) 오타** (예: `http:/naver.com`, `htp://naver.com`)
+           - 프로토콜은 아예 생략(`naver.com`)하거나 완벽히 적어야 합니다.
+        4. **도메인에 한글/특수문자 포함** (예: `네이버.com`, `my@domain.com`)
+           - 영문자, 숫자, 하이픈(`-`), 언더바(`_`)만 허용됩니다. (상세 경로는 예외)
+        5. **점(`.`)으로 시작/종료** (예: `.google.com`, `google.com.`)
       security:
         - BearerAuth: []
       parameters:
@@ -1135,7 +1160,7 @@ paths:
                         nullable: true
                         example: null
         "400":
-            description: 링크 이름(1~100자) 미입력 또는 올바른 URL 형식이 아님
+            description: 링크 이름(1~100자) 미입력 또는 올바른 URL 형식(description 참고)이 아님
             content:
               application/json:
                 schema:
@@ -1150,9 +1175,6 @@ paths:
         "403":                                            
           description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
-        "404":
-          description: 해당 teamId의 팀이 존재하지 않음
-          $ref: "#/components/responses/NotFound"
 
   /archives/{linkId}/links:
     delete:
@@ -1173,7 +1195,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
+                allOf:
+                  - $ref: "#/components/schemas/MessageResponse"
+                  - type: object
+                    properties:
+                      meta:
+                        nullable: true
+                        example: null
+                      error:
+                        nullable: true
+                        example: null        
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1214,10 +1245,6 @@ paths:
         "403":
           description: 해당 팀의 멤버가 아님                         
           $ref: "#/components/responses/Forbidden"
-        "404":
-          description: 해당 teamId의 팀이 존재하지 않음
-          $ref: "#/components/responses/NotFound"
-
     post:
       tags: [Archives]
       summary: 문서 등록
@@ -1275,9 +1302,6 @@ paths:
         "403":                                              
           description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
-        "404":
-          description: 해당 teamId의 팀이 존재하지 않음
-          $ref: "#/components/responses/NotFound"
 
   /archives/{docId}/documents:
     delete:
@@ -1301,7 +1325,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
+                allOf:
+                  - $ref: "#/components/schemas/MessageResponse"
+                  - type: object
+                    properties:
+                      meta:
+                        nullable: true
+                        example: null
+                      error:
+                        nullable: true
+                        example: null    
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1309,7 +1342,15 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           description: 해당 docId의 문서가 존재하지 않음
-          $ref: "#/components/responses/NotFound"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                data: null
+                meta: null
+                error: "해당 문서를 찾을 수 없습니다."
 
 #   # ──────────────────────────────────────────
 #   # 7. Logs (팀 활동 로그)
@@ -1570,10 +1611,10 @@ components:
             type: boolean
             example: false
           data:
-            nullable: true,
+            nullable: true
             example: null
           meta:
-            nullable: true,
+            nullable: true
             example: null
           error:
             type: string

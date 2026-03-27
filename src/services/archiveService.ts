@@ -43,7 +43,7 @@ export const getMeetingList = catchAsync(async (req: Request, res: Response) => 
     res.status(StatusCodes.OK).json(SUCCESS(list));    
 });
 
-//회의록 생성
+//회의록 작성
 export const createMeeting = catchAsync(async (req: Request, res: Response) => {
     const {title, content} = req.body;
     const teamId = parseInt(req.params.teamId as string);
@@ -113,8 +113,7 @@ export const deleteMeeting = catchAsync(async (req: Request, res: Response) => {
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    const member = await validateTeamAccess(res, archive.team_id, req.user!.uuid);
-    if (!member) return;
+    if (!(await validateTeamAccess(res, archive.team_id, req.user!.uuid))) return;
 
     await deleteById(archiveId);
 
