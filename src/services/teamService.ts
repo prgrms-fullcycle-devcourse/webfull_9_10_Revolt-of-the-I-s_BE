@@ -95,19 +95,8 @@ export const createTeam = catchAsync(async (req: Request, res: Response, next: N
 // DELETE /teams/:teamId/members/me - 팀 탈퇴
 export const leaveTeam = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.uuid;
-    const teamId = parseInt(req.params.teamId as string);
-    
-    const team = await findTeamByTeamId(teamId);
-    if(!team){
-        return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);    
-    }
-    
-    const member = await findTeamMember(teamId, userId);
-    if(!member){
-        return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN)
-    }
-
-    
+    const teamId = (req as any).verifiedTeamId;
+        
     await deleteTeamMember(teamId, userId);
     
     //아무도 안남았다면 팀 삭제 
@@ -163,20 +152,10 @@ export const joinTeam = catchAsync(async (req: Request, res: Response, next: Nex
 export const updatePosition = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const {position} = req.body;
     const userId = req.user!.uuid;
-    const teamId = parseInt(req.params.teamId as string);
+    const teamId = (req as any).verifiedTeamId;
 
     if (!v.isValidPosition(position)) {
         return res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, meta: null, error: "포지션은 1~20자 이내로 입력해주세요." });
-    }
-
-    const team = await findTeamByTeamId(teamId);
-    if(!team){
-        return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
-    }
-
-    const member = await findTeamMember(teamId, userId);
-    if(!member) {
-        return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
     }
 
     const updatedMember = await updateMemberPosition(teamId, userId, position.trim());
@@ -190,14 +169,8 @@ export const updatePosition = catchAsync(async (req: Request, res: Response, nex
  
 // GET /teams/:teamId/members/active - 활동 중인 팀원 목록
 export const getActiveMembers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    
     if (!v.isValidId(req.params.teamId)) return res.status(400).json(ERROR.BAD_REQUEST);
-    const teamId = parseInt(req.params.teamId as string);
-    
-    const team = await findTeamByTeamId(teamId);
-    if(!team){
-        return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);    
-    }
+    const teamId = (req as any).verifiedTeamId;    
 
     const rows = await findActiveMembers(teamId);
 
