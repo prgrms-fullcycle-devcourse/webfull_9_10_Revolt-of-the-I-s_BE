@@ -1,21 +1,22 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { findTeamMember } from "../repositories/teamRepository";
+import { findTeamMember, findTeamByTeamId } from "../repositories/teamRepository";
 import { ERROR } from "../utils/response";
+import catchAsync from "../utils/response";
 import pool from "../config/db";
 
-export const teamMemberMiddleware = async (
+export const teamMemberMiddleware = catchAsync(async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   const userId = req.user!.uuid;
-  const taskId = req.params.taskId;
-  const commentId = req.params.commentId;
+  const { taskId, commentId, archiveId, linkId, docId } = req.params;
 
-  let teamId: number;
+  // 파라미터에 teamId가 있다면 미리 담아둠
+  let teamId: any = req.params.teamId; 
 
-  if (taskId) {
+  if (taskId) { 
     const taskResult = await pool.query(
       `SELECT team_id FROM tasks WHERE id = $1`,
       [taskId],
@@ -24,7 +25,7 @@ export const teamMemberMiddleware = async (
       return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
     teamId = taskResult.rows[0].team_id;
-  } else if (commentId) {
+  } else if (commentId) { 
     const commentResult = await pool.query(
       `SELECT t.team_id FROM comments c
        JOIN tasks t ON c.task_id = t.id
@@ -35,8 +36,23 @@ export const teamMemberMiddleware = async (
       return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
     teamId = commentResult.rows[0].team_id;
-  } else {
+  } else if (archiveId || linkId || docId) { 
+    const id = archiveId || docId || linkId;
+    const result = await pool.query(
+      `SELECT team_id FROM archives WHERE uuid = $1`,
+       [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
+    }
+    teamId = result.rows[0].team_id;
+  } else if (!teamId) { 
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
+  }
+
+  const team = await findTeamByTeamId(teamId);
+  if (!team) {
+    return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
   const member = await findTeamMember(teamId, userId);
@@ -44,5 +60,7 @@ export const teamMemberMiddleware = async (
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
   }
 
+  (req as any).verifiedTeamId = teamId;
+
   next();
-};
+});
