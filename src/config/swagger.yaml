@@ -324,7 +324,7 @@ paths:
         - BearerAuth: []
       responses:
         "200":
-          description: 팀 목록 반환
+          description: 팀 목록 및 팀원 상세 정보 반환 성공
           content:
             application/json:
               schema:
@@ -339,6 +339,39 @@ paths:
                       meta:
                         nullable: true
                         example: null
+                      error:
+                        nullable: true
+                        example: null
+              example:
+                success: true
+                data:
+                  - id: 1
+                    name: "i-Station 백엔드 팀"
+                    owner_id: "550e8400-e29b-41d4-a716-446655440000"
+                    isMember: true
+                    members:
+                      - id: 10
+                        position: "BACKEND LEAD"
+                        status: "개발 중"
+                        user:
+                          uuid: "550e8400-e29b-41d4-a716-446655440000"
+                          email: "younga@istation.dev"
+                          name: "영아"
+                          phone: "010-1234-5678"
+                          github_url: "https://github.com/younga"
+                          profile_image: null
+                      - id: 11
+                        position: "FRONTEND DEV"
+                        status: "회의 중"
+                        user:
+                          uuid: "772e8400-e29b-41d4-a716-446655441111"
+                          email: "minsu@istation.dev"
+                          name: "민수"
+                          phone: "010-9876-5432"
+                          github_url: "https://github.com/minsu"
+                          profile_image: null
+                meta: null
+                error: null
         "401":
           $ref: "#/components/responses/Unauthorized"
 
