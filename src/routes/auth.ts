@@ -2,21 +2,18 @@ import { Router, Request, Response, NextFunction } from "express";
 import catchAsync from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
+import { validate } from "../utils/validators";
 
 const router: Router = Router();
 
 const signupSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다."),
-  nickname: z.string().min(2, "닉네임은 최소 2글자 이상이어야 합니다."),
+  name: z.string().min(1, "이름은 필수입니다."),
+  phone: z.string().min(10, "전화번호 형식이 올바르지 않습니다."),
   password: z.string().min(8, "비밀번호는 8자 이상이어야 합니다.")
     .regex(/[a-zA-Z]/, "영문자가 포함되어야 합니다.")
     .regex(/[0-9]/, "숫자가 포함되어야 합니다."),
 });
-
-interface ServiceError {
-  statusCode: number;
-  message: string;
-}
 
 class AppError extends Error {
   constructor(public statusCode: number, public message: string) {
@@ -26,12 +23,10 @@ class AppError extends Error {
 }
 
 // --- [회원가입] ---
-router.post("/signup", catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
+router.post("/signup", 
+  validate(signupSchema),
+  catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
     const userData = req.body;
-
-    if (!userData.email || !userData.password || !userData.name || !userData.phone) {
-      throw new AppError(400, "필수 값 누락 또는 형식이 올바르지 않습니다.");
-    }
 
     const result = await userService.signup(userData);
 
@@ -45,7 +40,7 @@ router.post("/signup", catchAsync(async (req: Request, res: Response, next: Next
       });
     }
     throw new AppError(500, "예기치 못한 오류가 발생했습니다.");
-  }),
+  }), 
 );
 
 // --- [로그인] ---
@@ -55,26 +50,40 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
     if ("token" in result) {
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 3600000,
       });
 
       return res.status(200).json({
         success: true,
+        data: {
+          token: result.token,
+          user: {
+            uuid: result.user.uuid,
+            name: result.user.name,
+            profile_image: null
+          },
+          meta: null,
+        },
         error: null,
       });
     }
 
-    throw new AppError(401, "로그인 실패.");
+    throw new AppError(401, "오류가 발생했습니다.");
   }),
 );
 
 // --- [로그아웃] ---
 router.post("/logout", catchAsync(async (req: Request, res: Response) => {
+    const token = req.cookies.accessToken
+    if (!token) {
+        throw new AppError(400, "인증 정보가 없습니다.");
+    }
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
+      sameSite: "none",
     });
 
     return res.status(200).json({
@@ -93,6 +102,8 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
     if ("token" in result) {
       res.cookie("accessToken", result.token, {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
         maxAge: 3600000,
       });
       return res.status(200).json({ success: true });
@@ -101,5 +112,7 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
     return res.status(401).json({ message: "구글 로그인 실패" });
   }),
 );
+
+
 
 export default router;

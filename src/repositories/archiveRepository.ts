@@ -2,34 +2,58 @@ import pool from '../config/db';
 
 type ArchiveType = 'LINK' | 'NOTE' | 'PDF';
 
-export const archiveRepository = {
 
-  // 팀 + 타입으로 목록 조회
-  findByTeamIdAndType: async (teamId: number, type: ArchiveType) => {
-    
-  },
+// 팀 + 타입별으로 목록 조회
+export const findByTeamIdAndType = async (teamId: number, type: ArchiveType) => {
+    const sql =`
+      SELECT id, team_id, type, title, content, created_at
+      FROM archives
+      WHERE team_id = $1 AND type = $2
+      ORDER BY created_at DESC;
+    `
+    const result = await pool.query(sql, [teamId, type]);
+    return result.rows
+};
 
-  // 단건 조회
-  findById: async (archiveId: number) => {},
+// 단건 조회
+export const findById = async (archiveId: number) => {
+    const sql = `SELECT * FROM archives WHERE id = $1;`;
+    const result = await pool.query(sql, [archiveId]);
+    return result.rows[0];
+}
 
   // 생성
-  create: async (data: {
+export const create = async (data: {
     team_id: number;
     type: ArchiveType;
     title: string;
     content: string;
-  }) => {
-    // TODO
-  },
+}) => {
+    const sql = `
+      INSERT INTO archives (team_id, type, title, content) 
+      VALUES ($1, $2, $3, $4) 
+      RETURNING id, team_id, type, title, content, created_at;
+    `;
+    const result = await pool.query(sql, [data.team_id, data.type, data.title, data.content]);
+    return result.rows[0];
+}
 
-  // 수정
-  update: async (archiveId: number, data: { title?: string; content?: string }) => {
-    // TODO
-  },
+// 수정
+export const update = async (archiveId: number, data: { title?: string; content?: string }) => {
+    const sql = `
+        UPDATE archives 
+        SET title = COALESCE($1, title), 
+            content = COALESCE($2, content) 
+        WHERE id = $3 
+        RETURNING id, team_id, type, title, content, created_at;
+    `;
+    const result = await pool.query(sql, [data.title, data.content, archiveId]);
+    return result.rows[0];
+}
 
-  // 삭제
-  deleteById: async (archiveId: number) => {
-    // TODO
-  },
+// 삭제
+export const deleteById = async (archiveId: number) => {
+  const sql = `DELETE FROM archives WHERE id = $1;`;
+  return await pool.query(sql, [archiveId]);
+}
 
-};

@@ -1,3 +1,12 @@
+import { Request, Response, NextFunction } from "express";
+import { ZodError, ZodIssue } from 'zod';
+
+export enum UserStatus {
+  ACTIVE = '업무 중',
+  REST = '휴식 중',  
+  AWAY = '자리비움'
+}
+
 // ID 유효성 검사
 // teamId, taskId, commentId
 export const isValidId = (id: string | string[] | undefined): boolean => {
@@ -10,6 +19,28 @@ export const isValidString = (value: any): boolean => {
   return !!value && typeof value === "string" && value.trim() !== "";
 };
 
+// 회원가입 유효성 검사
+export const validate = (schema: any) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await schema.parseAsync(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+       
+        const errorMessage = error.issues
+          .map((issue: ZodIssue) => `${issue.path.join('.')}: ${issue.message}`)
+          .join(', ');
+
+        const customError: any = new Error(errorMessage);
+        customError.statusCode = 400;
+        
+        return next(customError);
+      }
+      next(error);
+    }
+  };
+};
 // 팀 이름 유효성 검사 (2자 ~ 30자)
 export const isValidTeamName = (name: any): boolean => {
   if (!isValidString(name)) return false;
@@ -28,4 +59,20 @@ export const isValidPin = (pin: any): boolean => {
 export const isValidPosition = (position: any): boolean => {
   if (!isValidString(position)) return false;
   return position.trim().length <= 20; 
+};
+
+// 제목: 1~100자 사이 
+export const isValidArchiveTitle = (title: string): boolean => {
+    return typeof title === 'string' && title.trim().length >= 1 && title.trim().length <= 100;
+};
+
+// 내용(회의록): 최소 1자 이상
+export const isValidArchiveContent = (content: string): boolean => {
+    return typeof content === 'string' && content.trim().length >= 1;
+};
+
+// URL 형식 체크 (링크용) 
+export const isValidUrl = (url: string): boolean => {
+    const urlPattern = /^(https?:\/\/)?([\w\d\-_]+\.)+[\w\d\-_]+(\/.*)?$/i;
+    return urlPattern.test(url);
 };

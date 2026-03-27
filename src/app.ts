@@ -13,6 +13,7 @@ app.use(
       "https://i-station.onrender.com", // 백엔드 배포 주소
       "https://webfull-9-10-revolt-of-the-i-s-fe-e.vercel.app/", // 프론트 vercel
     ],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );
