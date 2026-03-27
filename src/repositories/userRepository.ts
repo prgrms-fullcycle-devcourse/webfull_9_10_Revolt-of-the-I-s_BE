@@ -1,4 +1,5 @@
 import pool from '../config/db';
+import { UserStatus } from "../utils/validators"
 
 export interface UserEntity {
     uuid: string;
@@ -35,17 +36,14 @@ export const findUserByEmail = async (email: string): Promise<UserEntity | null>
     return rows[0] || null;
 };
 
-export const patchByEmail = async (userData: any, status: Enumerator): Promise<UserEntity | null> => {
-    const sql = 'UPDATE users SET status = $1 WHERE email = $2 RETURNING *';
-    const params = [userData.email, status]
+export const patchByEmail = async (uuid: string, teamId: number, status: string): Promise<UserEntity | null> => {
+    const sql = 'UPDATE team_member SET status = $1 WHERE user_id = $2 AND team_id = $3 RETURNING *';
+    const params = [status, uuid, teamId]
     const { rows } = await pool.query(sql, params);
     return rows[0] || null;
 };
 
 export const createUser = async (userData: any): Promise<number> => {
-    // 예시: INSERT INTO users ...
-    // const [result] = await db.execute('INSERT INTO users...', [userData.name, ...]);
-    // return result.insertId;
 
     return 1
 };

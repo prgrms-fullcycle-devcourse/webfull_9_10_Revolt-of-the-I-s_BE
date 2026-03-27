@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
-
+import pusher from '../config/pusher';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET
@@ -109,11 +109,17 @@ export const googleLogin = async (idToken: string): Promise<{ token: string }> =
 };
 
 // 상태 수정
-export const status = async (userData: any, status: Enumerator): Promise<{ user: any } | ServiceError> => {
-    const user = await userRepo.patchByEmail(userData, status);
+export const status = async (uuid: string, teamId: number, status: string): Promise<{ user: any } | ServiceError> => {
+    const user = await userRepo.patchByEmail(uuid, teamId, status);
     if (!user) {
         throw new AppError(400, "잘못된 입력입니다.");
     }
+
+    pusher.trigger(`team-${teamId}`, "status-updated", {
+        email: user.email,
+        status: status, // "MEETING", "AWAY" 등
+        name: user.name
+    });
 
     return { user }
 };

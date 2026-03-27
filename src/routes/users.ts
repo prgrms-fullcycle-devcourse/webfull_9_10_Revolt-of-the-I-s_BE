@@ -32,15 +32,15 @@ router.get("/me", authMiddleware, catchAsync(async (req: any, res: Response) => 
 
 // PATCH
 router.patch("/me/status", authMiddleware, catchAsync(async(req: any, res: Response) => {
-    const { status } = req.body;  
-    const { email } = req.user; 
+    const { status, teamId } = req.body;  
+    const { uuid } = req.user;
 
     const isValidStatus = Object.values(UserStatus).includes(status as UserStatus);
 
     if (!isValidStatus) {
-        throw new AppError(400, `유효하지 않은 상태 값입니다. 허용되는 값: ${Object.values(UserStatus).join(', ')}`);
+        throw new AppError(400, `유효하지 않은 상태 값입니다.`);
     }
-    const result = await userService.status(email, status);
+    const result = await userService.status(uuid, teamId, status);
 
     if (!result) {
         throw new AppError(404, "해당 유저를 찾을 수 없습니다.");

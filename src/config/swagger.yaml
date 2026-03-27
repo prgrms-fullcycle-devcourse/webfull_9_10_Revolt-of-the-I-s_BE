@@ -280,7 +280,6 @@ paths:
       summary: 내 상태 업데이트
       description: |
         내 배지 상태(💻 개발 중, ☕ 휴식 중, 🗣 회의 중)를 변경하고 Pusher로 실시간 전송합니다.
-        자리비움(⛔️)은 사용자가 임의로 선택할 수 없습니다. 미구현 입니다. TEAM API가 정리되는 대로 갱신하겠습니다.
       security:
         - BearerAuth: []
       requestBody:
@@ -289,27 +288,38 @@ paths:
           application/json:
             schema:
               type: object
-              required: [status]
+              required: [status, teamId]
               properties:
+                teamId:
+                  type: integer
+                  description: "팀의 고유 ID"
+                  example: 1
                 status:
                   type: string
-                  enum: ["업무 중", "회의 중", "쉬는 중"]
-                  example: 업무 중
+                  description: "유저의 현재 상태"
+                  enum: ["업무 중", "회의 중", "쉬는 중", "자리 비움"]
+                  example: "업무 중"      
       responses:
         "200":
           description: 상태 변경 성공
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
+                $ref: "#/components/schemas/SuccessResponse"
         "400":
-          description: 잘못된 상태값 (자리비움 직접 선택 불가)
+          description: 잘못된 상태값
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: 잘못된 유저값
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"    
 
   # # ──────────────────────────────────────────
   # # 3. Teams (팀 로비)
