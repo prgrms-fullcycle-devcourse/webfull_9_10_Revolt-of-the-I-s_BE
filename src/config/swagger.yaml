@@ -848,7 +848,6 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-
   # ──────────────────────────────────────────
   # 7. Logs (팀 활동 로그)
   # ──────────────────────────────────────────
@@ -874,31 +873,9 @@ paths:
                         items:
                           $ref: "#/components/schemas/LogResponse"
 
-  #   delete:
-  #     tags: [Comments]
-  #     summary: 댓글 삭제
-  #     description: 댓글을 삭제하고 Pusher로 실시간 전송합니다.
-  #     security:
-  #       - BearerAuth: []
-  #     parameters:
-  #       - $ref: "#/components/parameters/commentId"
-  #     responses:
-  #       "200":
-  #         description: 댓글 삭제 성공
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/MessageResponse"
-  #       "401":
-  #         $ref: "#/components/responses/Unauthorized"
-  #       "403":
-  #         $ref: "#/components/responses/Forbidden"
-  #       "404":
-  #         $ref: "#/components/responses/NotFound"
-
-#   # ──────────────────────────────────────────
-#   # 6. Archives
-#   # ──────────────────────────────────────────
+  #   # ──────────────────────────────────────────
+  #   # 6. Archives
+  #   # ──────────────────────────────────────────
 
   /teams/{teamId}/archives/meeting:
     get:
@@ -925,11 +902,11 @@ paths:
                           $ref: "#/components/schemas/NoteSummary"
                       meta:
                         nullable: true
-                        example: null              
+                        example: null
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          description: 해당 팀의 멤버가 아님   
+          description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
 
     post:
@@ -971,31 +948,31 @@ paths:
                       meta:
                         nullable: true
                         example: null
-        "400":                         
+        "400":
           description: 제목(1~100자) 또는 본문 미입력
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               examples:
-                  invalidTitle:
-                    summary: 제목 길이 제한 위반
-                    value:
-                      success: false
-                      data: null
-                      meta: null
-                      error: "제목은 1~100자 사이로 입력해주세요."
-                  invalidContent:
-                    summary: 본문 누락
-                    value:
-                      success: false
-                      data: null
-                      meta: null
-                      error: "회의록 본문을 입력해주세요."               
+                invalidTitle:
+                  summary: 제목 길이 제한 위반
+                  value:
+                    success: false
+                    data: null
+                    meta: null
+                    error: "제목은 1~100자 사이로 입력해주세요."
+                invalidContent:
+                  summary: 본문 누락
+                  value:
+                    success: false
+                    data: null
+                    meta: null
+                    error: "회의록 본문을 입력해주세요."
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          description: 해당 팀의 멤버가 아님                         
+          description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
 
   /archives/{archiveId}/meeting:
@@ -1023,8 +1000,8 @@ paths:
                         example: null
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":    
-          description: 해당 팀의 멤버가 아님                    
+        "403":
+          description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
@@ -1032,7 +1009,7 @@ paths:
     patch:
       tags: [Archives]
       summary: 회의록 수정
-      description: Markdown 텍스트로 회의록을 수정합니다. title, content 중 전달된 필드만 수정됩니다 (부분 수정 가능). title 전달 시 1~100자 유효성 검사를 수행합니다. 
+      description: Markdown 텍스트로 회의록을 수정합니다. title, content 중 전달된 필드만 수정됩니다 (부분 수정 가능). title 전달 시 1~100자 유효성 검사를 수행합니다.
       security:
         - BearerAuth: []
       parameters:
@@ -1067,7 +1044,7 @@ paths:
                       meta:
                         nullable: true
                         example: null
-        "400":                         
+        "400":
           description: 제목이 1~100자 범위를 벗어남 (content 단독 수정 시엔 400 미발생)
           content:
             application/json:
@@ -1081,7 +1058,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          description: 해당 팀의 멤버가 아님  
+          description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
         "404":
           description: 해당 archiveId의 회의록이 존재하지 않음
@@ -1113,7 +1090,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          description: 해당 팀의 멤버가 아님  
+          description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
         "404":
           description: 해당 archiveId의 회의록이 존재하지 않음
@@ -1147,7 +1124,7 @@ paths:
                         example: null
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":                                              
+        "403":
           description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
 
@@ -1203,19 +1180,19 @@ paths:
                         nullable: true
                         example: null
         "400":
-            description: 링크 이름(1~100자) 미입력 또는 올바른 URL 형식(description 참고)이 아님
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/ErrorResponse"
-                example:
-                  success: false
-                  data: null
-                  meta: null
-                  error: "올바른 URL 형식을 입력해주세요."
+          description: 링크 이름(1~100자) 미입력 또는 올바른 URL 형식(description 참고)이 아님
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                data: null
+                meta: null
+                error: "올바른 URL 형식을 입력해주세요."
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":                                            
+        "403":
           description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
 
@@ -1247,7 +1224,7 @@ paths:
                         example: null
                       error:
                         nullable: true
-                        example: null        
+                        example: null
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1286,7 +1263,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          description: 해당 팀의 멤버가 아님                         
+          description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
     post:
       tags: [Archives]
@@ -1301,7 +1278,7 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:  
+          multipart/form-data:
             schema:
               type: object
               required: [file]
@@ -1310,7 +1287,7 @@ paths:
                   type: string
                   maxLength: 100
                   example: i-Station 기획서 v1.pdf
-                file:              
+                file:
                   type: string
                   format: binary
                   description: 업로드할 파일 (PDF)
@@ -1329,7 +1306,7 @@ paths:
                       meta:
                         nullable: true
                         example: null
-        "400":                         
+        "400":
           description: file 필드가 없거나 파일 업로드가 누락된 경우 (req.file이 undefined인 경우)
           content:
             application/json:
@@ -1342,7 +1319,7 @@ paths:
                 error: "업로드된 파일이 없습니다."
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":                                              
+        "403":
           description: 해당 팀의 멤버가 아님
           $ref: "#/components/responses/Forbidden"
 
@@ -1377,7 +1354,7 @@ paths:
                         example: null
                       error:
                         nullable: true
-                        example: null    
+                        example: null
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1394,53 +1371,6 @@ paths:
                 data: null
                 meta: null
                 error: "해당 문서를 찾을 수 없습니다."
-
-#   # ──────────────────────────────────────────
-#   # 7. Logs (팀 활동 로그)
-#   # ──────────────────────────────────────────
-
-# /tasks/{teamId}/logs:
-#   get:
-#     tags: [Logs]
-#     summary: 팀 활동 로그 조회
-#     description: 팀의 활동 로그를 최신순으로 조회합니다. new(읽지 않은 로그) 선별이 가능합니다.
-#     security:
-#       - BearerAuth: []
-#     parameters:
-#       - name: teamId
-#         in: path
-#         required: true
-#         schema:
-#           type: integer
-#         example: 1
-#       - name: new
-#         in: query
-#         required: false
-#         schema:
-#           type: boolean
-#         description: true 시 읽지 않은 로그만 반환
-#         example: true
-#     responses:
-#       "200":
-#         description: 활동 로그 목록 반환
-#         content:
-#           application/json:
-#             schema:
-#               allOf:
-#                 - $ref: "#/components/schemas/SuccessResponse"
-#                 - type: object
-#                   properties:
-#                     data:
-#                       type: array
-#                       items:
-#                         $ref: "#/components/schemas/Log"
-#                     meta:
-#                       nullable: true
-#                       example: null
-#       "401":
-#         $ref: "#/components/responses/Unauthorized"
-#       "404":
-#         $ref: "#/components/responses/NotFound"
 
 # ──────────────────────────────────────────
 # Components
@@ -1562,251 +1492,251 @@ components:
             error: "오류가 발생했습니다"
 
   schemas:
-      ArchiveBase:
-        type: object
-        properties:
-          id:
-            type: integer
-            example: 9
-          team_id:
-            type: integer
-            example: 8
-          type:
-            type: string
-            enum: [LINK, NOTE, PDF]
-          title:
-            type: string
-            example: "주간 회의록 (03.11)"
-          content:
-            type: string
-          created_at:
-            type: string
-            format: date-time
-            example: "2026-03-26T09:31:28.127Z"
+    ArchiveBase:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 9
+        team_id:
+          type: integer
+          example: 8
+        type:
+          type: string
+          enum: [LINK, NOTE, PDF]
+        title:
+          type: string
+          example: "주간 회의록 (03.11)"
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-03-26T09:31:28.127Z"
 
-      NoteSummary:
-        allOf:
-          - $ref: "#/components/schemas/ArchiveBase"
-          - type: object
-            properties:
-              type:
-                example: "NOTE"
-              content:
-                description: Markdown 형식의 회의 내용
-                example: "## 결정 사항\n- MVP 기능 확정"
+    NoteSummary:
+      allOf:
+        - $ref: "#/components/schemas/ArchiveBase"
+        - type: object
+          properties:
+            type:
+              example: "NOTE"
+            content:
+              description: Markdown 형식의 회의 내용
+              example: "## 결정 사항\n- MVP 기능 확정"
 
-      LinkSummary:
-        allOf:
-          - $ref: "#/components/schemas/ArchiveBase"
-          - type: object
-            properties:
-              type:
-                example: "LINK"
-              content:
-                description: 연결될 URL
-                example: "https://www.naver.com/"
+    LinkSummary:
+      allOf:
+        - $ref: "#/components/schemas/ArchiveBase"
+        - type: object
+          properties:
+            type:
+              example: "LINK"
+            content:
+              description: 연결될 URL
+              example: "https://www.naver.com/"
 
-      DocumentSummary:
-        allOf:
-          - $ref: "#/components/schemas/ArchiveBase"
-          - type: object
-            properties:
-              type:
-                example: "PDF"
-              content:
-                description: S3 업로드된 파일 URL
-                example: "https://istation-archive-storage-2026.s3.ap-southeast-2.amazonaws.com/archives/..."
+    DocumentSummary:
+      allOf:
+        - $ref: "#/components/schemas/ArchiveBase"
+        - type: object
+          properties:
+            type:
+              example: "PDF"
+            content:
+              description: S3 업로드된 파일 URL
+              example: "https://istation-archive-storage-2026.s3.ap-southeast-2.amazonaws.com/archives/..."
 
-      SuccessResponse:
-        type: object
-        properties:
-          success:
-            type: boolean
-            example: true
-          data:
-            type: object
-          meta:
-            type: object
-            nullable: true
-            example: null
-          error:
-            type: string
-            nullable: true
-            example: null
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        meta:
+          type: object
+          nullable: true
+          example: null
+        error:
+          type: string
+          nullable: true
+          example: null
 
-      MessageResponse:
-        type: object
-        properties:
-          success:
-            type: boolean
-            example: true
-          data:
-            type: object
-            properties:
-              message:
-                type: string
-                example: "성공적으로 처리되었습니다."
+    MessageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "성공적으로 처리되었습니다."
 
-      ErrorResponse:
-        type: object
-        properties:
-          success:
-            type: boolean
-            example: false
-          data:
-            nullable: true
-            example: null
-          meta:
-            nullable: true
-            example: null
-          error:
-            type: string
-            example: "오류가 발생했습니다."
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        data:
+          nullable: true
+          example: null
+        meta:
+          nullable: true
+          example: null
+        error:
+          type: string
+          example: "오류가 발생했습니다."
 
-      UserResponse:
-        type: object
-        properties:
-          uuid:
-            type: string
-            example: "550e8400-e29b-41d4-a716-446655440000"
-          name:
-            type: string
-            example: 홍길동
-          profile_image:
-            type: string
-            nullable: true
+    UserResponse:
+      type: object
+      properties:
+        uuid:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: 홍길동
+        profile_image:
+          type: string
+          nullable: true
 
-      UserSummary:
-        type: object
-        properties:
-          uuid:
-            type: string
-            example: "1"
-          name:
-            type: string
-            example: "kim"
-          profile_image:
-            type: string
-            nullable: true
+    UserSummary:
+      type: object
+      properties:
+        uuid:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "kim"
+        profile_image:
+          type: string
+          nullable: true
 
-      Team:
-        type: object
-        properties:
-          id:
-            type: integer
-          name:
-            type: string
-          owner_id:
-            type: string
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        owner_id:
+          type: string
 
-      TeamMember:
-        type: object
-        properties:
-          id:
-            type: integer
-          position:
-            type: string
-          status:
-            type: string
-          user:
-            $ref: "#/components/schemas/UserResponse"
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        position:
+          type: string
+        status:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserResponse"
 
-      TeamWithMembers:
-        allOf:
-          - $ref: "#/components/schemas/Team"
-          - type: object
-            properties:
-              isMember:
-                type: boolean
-              members:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TeamMember"
+    TeamWithMembers:
+      allOf:
+        - $ref: "#/components/schemas/Team"
+        - type: object
+          properties:
+            isMember:
+              type: boolean
+            members:
+              type: array
+              items:
+                $ref: "#/components/schemas/TeamMember"
 
-      TaskQuantity:
-        type: object
-        properties:
-          Todo:
-            type: integer
-            example: 1
-          Doing:
-            type: integer
-          Done:
-            type: integer
-          Checked:
-            type: integer
+    TaskQuantity:
+      type: object
+      properties:
+        Todo:
+          type: integer
+          example: 1
+        Doing:
+          type: integer
+        Done:
+          type: integer
+        Checked:
+          type: integer
 
-      TaskWithCommentCount:
-        type: object
-        properties:
-          id:
-            type: integer
-          task_number:
-            type: integer
-          team_id:
-            type: integer
-          title:
-            type: string
-          content:
-            type: string
-          status:
-            type: string
-          worker_id:
-            type: string
-            nullable: true
-          created_at:
-            type: string
-            format: date-time
-          comment_count:
-            type: integer
-            example: 0
+    TaskWithCommentCount:
+      type: object
+      properties:
+        id:
+          type: integer
+        task_number:
+          type: integer
+        team_id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        status:
+          type: string
+        worker_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        comment_count:
+          type: integer
+          example: 0
 
-      TaskDetail:
-        allOf:
-          - $ref: "#/components/schemas/TaskWithCommentCount"
-          - type: object
-            properties:
-              requester:
-                $ref: "#/components/schemas/UserSummary"
-              worker:
-                $ref: "#/components/schemas/UserSummary"
-              comments:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CommentResponse"
+    TaskDetail:
+      allOf:
+        - $ref: "#/components/schemas/TaskWithCommentCount"
+        - type: object
+          properties:
+            requester:
+              $ref: "#/components/schemas/UserSummary"
+            worker:
+              $ref: "#/components/schemas/UserSummary"
+            comments:
+              type: array
+              items:
+                $ref: "#/components/schemas/CommentResponse"
 
-      CommentResponse:
-        type: object
-        properties:
-          id:
-            type: integer
-          task_id:
-            type: integer
-          content:
-            type: string
-          created_at:
-            type: string
-            format: date-time
-          user:
-            $ref: "#/components/schemas/UserSummary"
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        task_id:
+          type: integer
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/UserSummary"
 
-      LogResponse:
-        type: object
-        properties:
-          id:
-            type: integer
-          team_id:
-            type: integer
-          user_id:
-            type: string
-          task_id:
-            type: integer
-          action_type:
-            type: string
-          message:
-            type: string
-          created_at:
-            type: string
-            format: date-time
-          user:
-            $ref: "#/components/schemas/UserSummary"
+    LogResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        team_id:
+          type: integer
+        user_id:
+          type: string
+        task_id:
+          type: integer
+        action_type:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/UserSummary"
