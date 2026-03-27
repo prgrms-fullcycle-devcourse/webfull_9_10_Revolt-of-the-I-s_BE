@@ -12,24 +12,27 @@ import {
   createDocument,
   deleteDocument,
 } from '../services/archiveService';
+import { authMiddleware } from "../utils/auth";
+import { upload } from '../utils/s3';
  
 const router: import("express").Router = express.Router();
 
+
 // Meeting
-router.get('/teams/:teamId/archives/meeting', getMeetingList);
-router.post('/teams/:teamId/archives/meeting', createMeeting);
-router.get('/archives/meeting/:archiveId', getMeetingDetail);
-router.patch('/archives/meeting/:archiveId', updateMeeting);
-router.delete('/archives/meeting/:archiveId', deleteMeeting);
+router.get('/teams/:teamId/archives/meeting', authMiddleware, getMeetingList);
+router.post('/teams/:teamId/archives/meeting', authMiddleware, createMeeting);
+router.get('/archives/:archiveId/meeting/', authMiddleware, getMeetingDetail);
+router.patch('/archives/:archiveId/meeting/', authMiddleware, updateMeeting);
+router.delete('/archives/:archiveId/meeting/', authMiddleware, deleteMeeting);
 
 // Links
-router.get('/teams/:teamId/archives/links', getLinkList);
-router.post('/teams/:teamId/archives/links', createLink);
-router.delete('/archives/links/:linkId', deleteLink);
+router.get('/teams/:teamId/archives/links', authMiddleware, getLinkList);
+router.post('/teams/:teamId/archives/links', authMiddleware, createLink);
+router.delete('/archives/:linkId/links/', authMiddleware, deleteLink);
 
 // Documents
-router.get('/teams/:teamId/archives/documents', getDocumentList);
-router.post('/teams/:teamId/archives/documents', createDocument);
-router.delete('/archives/documents/:docId', deleteDocument);
+router.get('/teams/:teamId/archives/documents', authMiddleware, getDocumentList);
+router.post('/teams/:teamId/archives/documents',authMiddleware, upload.single('file'), createDocument);
+router.delete('/archives/:docId/documents/', authMiddleware, deleteDocument);
 
 export default router;

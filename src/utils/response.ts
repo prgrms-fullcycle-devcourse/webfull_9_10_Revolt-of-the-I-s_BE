@@ -14,6 +14,14 @@ export const SUCCESS = (data: any = null) => ({
   error: null,
 });
 
+// task 상태값 동적 에러
+export const INVALID_STATUS_ERROR = (message: string) => ({
+  success: false,
+  data: null,
+  meta: null,
+  error: message,
+});
+
 // 에러 응답
 export const ERROR = {
   UNAUTHORIZED: {
@@ -54,6 +62,8 @@ export const ERROR = {
   },
   INTERNAL_SERVER_ERROR: {
     success: false,
+    data: null,
+    meta: null,
     error: "서버 오류가 발생했습니다.",
   },
   INVALID_ID: {

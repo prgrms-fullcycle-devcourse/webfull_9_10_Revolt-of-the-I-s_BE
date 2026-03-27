@@ -11,6 +11,7 @@ app.use(
     origin: [
       "http://localhost:5173", // 로컬 프론트엔드 개발 주소
       "https://i-station.onrender.com", // 백엔드 배포 주소
+      "https://webfull-9-10-revolt-of-the-i-s-fe-e.vercel.app/", // 프론트 vercel
     ],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
