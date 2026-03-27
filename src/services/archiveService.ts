@@ -66,7 +66,7 @@ export const createMeeting = catchAsync(async (req: Request, res: Response) => {
     res.status(StatusCodes.CREATED).json(SUCCESS(newMeeting));
 });
 
-// 회의록 목록 생성
+// 회의록 상세 조회
 export const getMeetingDetail = catchAsync(async (req: Request, res: Response) => {
     const archiveId = parseInt(req.params.archiveId as string);
     const archive = await findById(archiveId);
