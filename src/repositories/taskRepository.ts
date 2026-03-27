@@ -79,6 +79,16 @@ export interface UpdatedCommentRow {
   user: TaskUserInfo;
 }
 
+export interface UpdatedTaskStatusRow {
+  id: number;
+  task_number: number;
+  team_id: number;
+  title: string;
+  status: "Todo" | "Doing" | "Done" | "Checked";
+  requester_id: string;
+  worker_id: string | null;
+}
+
 // 팀별 Task 목록 조회
 export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
   const query = `
@@ -188,14 +198,6 @@ export const deleteTaskById = async (taskId: number): Promise<boolean> => {
   return result.rows.length > 0;
 };
 
-export const findTaskOwner = async (taskId: number) => {
-  const result = await pool.query(
-    `SELECT id, requester_id FROM tasks WHERE id = $1`,
-    [taskId],
-  );
-  return result.rows[0] ?? null;
-};
-
 // 댓글 작성
 export const insertComment = async (
   taskId: number,
@@ -271,12 +273,20 @@ export const deleteCommentById = async (
   return result.rows.length > 0;
 };
 
-// task 존재 확인
-export const existsTaskById = async (taskId: number): Promise<boolean> => {
-  const result = await pool.query(`SELECT 1 FROM tasks WHERE id = $1`, [
-    taskId,
-  ]);
-  return result.rows.length > 0;
+// task 상태 업데이트
+export const updateTaskStatusByTask = async (
+  taskId: number,
+  currentStatus: "Todo" | "Doing" | "Done" | "Checked",
+  nextStatus: "Todo" | "Doing" | "Done" | "Checked",
+): Promise<UpdatedTaskStatusRow | null> => {
+  const result = await pool.query(
+    `UPDATE tasks SET status = $1 
+     WHERE id = $2 AND status = $3  -- 현재 상태가 맞을 때만 변경
+     RETURNING id, task_number, team_id, title, status, requester_id, worker_id`,
+    [nextStatus, taskId, currentStatus],
+  );
+
+  return result.rows[0] ?? null;
 };
 
 // 댓글 존재 + 작성자 확인용
@@ -284,6 +294,16 @@ export const existsCommentById = async (commentId: number) => {
   const result = await pool.query(
     `SELECT id, task_id, user_id FROM comments WHERE id = $1`,
     [commentId],
+  );
+  return result.rows[0] ?? null;
+};
+
+// 팀 검증 + 상태 검증
+export const findTaskOwner = async (taskId: number) => {
+  const result = await pool.query(
+    `SELECT id, task_number, team_id, status, requester_id, worker_id 
+     FROM tasks WHERE id = $1`,
+    [taskId],
   );
   return result.rows[0] ?? null;
 };
