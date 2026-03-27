@@ -12,7 +12,7 @@ export const findAllWithMembers = async (currentUserId: string) => {
             tm.id AS member_id, 
             tm.position, 
             tm.status,
-            u.uuid AS user_uuid, u.name AS user_name, u.profile_image
+            u.uuid AS user_uuid, u.email, u.name AS user_name, u.phone, u.github_url, u.profile_image
         FROM teams t
         LEFT JOIN team_member tm ON t.id = tm.team_id
         LEFT JOIN users u ON tm.user_id = u.uuid;

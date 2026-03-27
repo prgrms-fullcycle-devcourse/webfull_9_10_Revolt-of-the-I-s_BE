@@ -60,3 +60,19 @@ export const isValidPosition = (position: any): boolean => {
   if (!isValidString(position)) return false;
   return position.trim().length <= 20; 
 };
+
+// 제목: 1~100자 사이 
+export const isValidArchiveTitle = (title: string): boolean => {
+    return typeof title === 'string' && title.trim().length >= 1 && title.trim().length <= 100;
+};
+
+// 내용(회의록): 최소 1자 이상
+export const isValidArchiveContent = (content: string): boolean => {
+    return typeof content === 'string' && content.trim().length >= 1;
+};
+
+// URL 형식 체크 (링크용) 
+export const isValidUrl = (url: string): boolean => {
+    const urlPattern = /^(https?:\/\/)?([\w\d\-_]+\.)+[\w\d\-_]+(\/.*)?$/i;
+    return urlPattern.test(url);
+};
