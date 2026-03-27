@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from "express";
 
 const catchAsync = (fn: any) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -11,12 +11,12 @@ export const ERROR = {
     success: false,
     data: null,
     meta: null,
-    error: "인증 토큰이 없거나 유효하지 않습니다"
+    error: "인증 토큰이 없거나 유효하지 않습니다",
   },
   FORBIDDEN: {
     success: false,
     data: null,
-    meta: null,    
+    meta: null,
     message: "해당 작업에 대한 권한이 없습니다",
   },
   NOT_FOUND: {
@@ -36,7 +36,7 @@ export const ERROR = {
     data: null,
     meta: null,
     message: "오류가 발생했습니다",
-  }
+  },
 };
 
 export default catchAsync;

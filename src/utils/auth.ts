@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
+import { StatusCodes } from "http-status-codes";
+import { ERROR } from "../utils/response";
+
 declare global {
   namespace Express {
     interface Request {
@@ -20,12 +23,7 @@ export const authMiddleware = (
   const token = req.cookies.accessToken;
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "인증 토큰이 없거나 유효하지 않습니다",
-    });
+    return res.status(StatusCodes.UNAUTHORIZED).json(ERROR.UNAUTHORIZED);
   }
 
   try {
@@ -40,11 +38,6 @@ export const authMiddleware = (
     };
     next();
   } catch (err) {
-    return res.status(401).json({
-      success: false,
-      data: null,
-      meta: null,
-      error: "인증 토큰이 없거나 유효하지 않습니다",
-    });
+    return res.status(StatusCodes.UNAUTHORIZED).json(ERROR.UNAUTHORIZED);
   }
 };
