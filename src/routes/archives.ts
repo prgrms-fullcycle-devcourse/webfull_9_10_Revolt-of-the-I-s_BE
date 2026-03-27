@@ -13,26 +13,28 @@ import {
   deleteDocument,
 } from '../services/archiveService';
 import { authMiddleware } from "../utils/auth";
+import { teamMemberMiddleware } from "../utils/teamMember";
+
 import { upload } from '../utils/s3';
  
 const router: import("express").Router = express.Router();
 
 
 // Meeting
-router.get('/teams/:teamId/archives/meeting', authMiddleware, getMeetingList);
-router.post('/teams/:teamId/archives/meeting', authMiddleware, createMeeting);
-router.get('/archives/:archiveId/meeting/', authMiddleware, getMeetingDetail);
-router.patch('/archives/:archiveId/meeting/', authMiddleware, updateMeeting);
-router.delete('/archives/:archiveId/meeting/', authMiddleware, deleteMeeting);
+router.get('/teams/:teamId/archives/meeting', authMiddleware, teamMemberMiddleware, getMeetingList);
+router.post('/teams/:teamId/archives/meeting', authMiddleware, teamMemberMiddleware, createMeeting);
+router.get('/archives/:archiveId/meeting/', authMiddleware, teamMemberMiddleware, getMeetingDetail);
+router.patch('/archives/:archiveId/meeting/', authMiddleware, teamMemberMiddleware, updateMeeting);
+router.delete('/archives/:archiveId/meeting/', authMiddleware, teamMemberMiddleware, deleteMeeting);
 
 // Links
-router.get('/teams/:teamId/archives/links', authMiddleware, getLinkList);
-router.post('/teams/:teamId/archives/links', authMiddleware, createLink);
-router.delete('/archives/:linkId/links/', authMiddleware, deleteLink);
+router.get('/teams/:teamId/archives/links', authMiddleware, teamMemberMiddleware, getLinkList);
+router.post('/teams/:teamId/archives/links', authMiddleware, teamMemberMiddleware, createLink);
+router.delete('/archives/:linkId/links/', authMiddleware, teamMemberMiddleware, deleteLink);
 
 // Documents
-router.get('/teams/:teamId/archives/documents', authMiddleware, getDocumentList);
-router.post('/teams/:teamId/archives/documents',authMiddleware, upload.single('file'), createDocument);
-router.delete('/archives/:docId/documents/', authMiddleware, deleteDocument);
+router.get('/teams/:teamId/archives/documents', authMiddleware, teamMemberMiddleware, getDocumentList);
+router.post('/teams/:teamId/archives/documents',authMiddleware, teamMemberMiddleware, upload.single('file'), createDocument);
+router.delete('/archives/:docId/documents/', authMiddleware, teamMemberMiddleware, deleteDocument);
 
 export default router;

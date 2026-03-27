@@ -22,22 +22,12 @@ const sendError = (res: Response, statusCode: number, message: string) => {
     });
 };
 
-// 팀 접근 권한 검증
-const validateTeamAccess = async (res: Response, teamId: number, userId: string) => {
-    const member = await findTeamMember(teamId, userId);
-    if (!member) {
-        res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN); 
-        return null; 
-    }
-    return member;
-};
 
 // =========== 회의록 ===========
 
 //회의록 목록 조회 
 export const getMeetingList = catchAsync(async (req: Request, res: Response) => {
-    const teamId = parseInt(req.params.teamId as string);
-    if (!(await validateTeamAccess(res, teamId, req.user!.uuid))) return;
+    const teamId = (req as any).verifiedTeamId;
 
     const list = await findByTeamIdAndType(teamId, 'NOTE');
     res.status(StatusCodes.OK).json(SUCCESS(list));    
@@ -46,9 +36,8 @@ export const getMeetingList = catchAsync(async (req: Request, res: Response) => 
 //회의록 작성
 export const createMeeting = catchAsync(async (req: Request, res: Response) => {
     const {title, content} = req.body;
-    const teamId = parseInt(req.params.teamId as string);
     
-    if (!(await validateTeamAccess(res, teamId, req.user!.uuid))) return;
+    const teamId = (req as any).verifiedTeamId;
 
     if (!v.isValidArchiveTitle(title)) {
         return sendError(res, StatusCodes.BAD_REQUEST, "제목은 1~100자 사이로 입력해주세요."); 
@@ -75,8 +64,6 @@ export const getMeetingDetail = catchAsync(async (req: Request, res: Response) =
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    if (!(await validateTeamAccess(res, archive.team_id, req.user!.uuid))) return;
-
     res.status(StatusCodes.OK).json(SUCCESS(archive));
 });
 
@@ -89,8 +76,6 @@ export const updateMeeting = catchAsync(async (req: Request, res: Response) => {
     if (!archive || archive.type !== 'NOTE') {
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
-
-    if (!(await validateTeamAccess(res, archive.team_id, req.user!.uuid))) return;
 
     if (title && !v.isValidArchiveTitle(title)) {
         return sendError(res, StatusCodes.BAD_REQUEST, "제목은 1~100자 사이여야 합니다.");
@@ -113,8 +98,6 @@ export const deleteMeeting = catchAsync(async (req: Request, res: Response) => {
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    if (!(await validateTeamAccess(res, archive.team_id, req.user!.uuid))) return;
-
     await deleteById(archiveId);
 
     res.status(StatusCodes.OK).json(SUCCESS({ message: "성공적으로 삭제되었습니다." }));
@@ -124,8 +107,7 @@ export const deleteMeeting = catchAsync(async (req: Request, res: Response) => {
 
 // 링크 목록 조회
 export const getLinkList = catchAsync(async (req: Request, res: Response) => {
-    const teamId = parseInt(req.params.teamId as string);
-    if (!(await validateTeamAccess(res, teamId, req.user!.uuid))) return;
+    const teamId = (req as any).verifiedTeamId;
 
     const list = await findByTeamIdAndType(teamId, 'LINK');
     res.status(StatusCodes.OK).json(SUCCESS(list));
@@ -134,9 +116,8 @@ export const getLinkList = catchAsync(async (req: Request, res: Response) => {
 // 링크 생성
 export const createLink = catchAsync(async (req: Request, res: Response) => {
     const { title, content } = req.body;
-    const teamId = parseInt(req.params.teamId as string);
 
-    if (!(await validateTeamAccess(res, teamId, req.user!.uuid))) return;
+    const teamId = (req as any).verifiedTeamId;
 
     if (!v.isValidArchiveTitle(title)) {
         return sendError(res, StatusCodes.BAD_REQUEST, "링크 이름은 1~100자 사이여야 합니다.");
@@ -163,8 +144,6 @@ export const deleteLink = catchAsync(async (req: Request, res: Response) => {
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
-    if (!(await validateTeamAccess(res, archive.team_id, req.user!.uuid))) return;
-
     await deleteById(linkId);
     res.status(StatusCodes.OK).json(SUCCESS({ message: "링크가 삭제되었습니다." }));
 });
@@ -173,8 +152,7 @@ export const deleteLink = catchAsync(async (req: Request, res: Response) => {
 
 // 문서 목록 조회
 export const getDocumentList = catchAsync(async (req: Request, res: Response) => {
-    const teamId = parseInt(req.params.teamId as string);
-    if (!(await validateTeamAccess(res, teamId, req.user!.uuid))) return;
+    const teamId = (req as any).verifiedTeamId;
 
     const list = await findByTeamIdAndType(teamId, 'PDF');
     res.status(StatusCodes.OK).json(SUCCESS(list));
@@ -182,8 +160,7 @@ export const getDocumentList = catchAsync(async (req: Request, res: Response) =>
 
 // 문서 생성
 export const createDocument = catchAsync(async (req: Request, res: Response) => {
-    const teamId = parseInt(req.params.teamId as string);
-    if (!(await validateTeamAccess(res, teamId, req.user!.uuid))) return;
+    const teamId = (req as any).verifiedTeamId;
 
     if (!req.file) return sendError(res, StatusCodes.BAD_REQUEST, "업로드된 파일이 없습니다.");
 
@@ -206,7 +183,6 @@ export const deleteDocument = catchAsync(async (req: Request, res: Response) => 
     const archive = await findById(archiveId);
     
     if (!archive) return sendError(res, StatusCodes.NOT_FOUND, "해당 문서를 찾을 수 없습니다.");
-    if (!(await validateTeamAccess(res, archive.team_id, req.user!.uuid))) return;
 
     // S3 버킷 내 삭제 
     if (archive.type === 'PDF' && archive.content) {
