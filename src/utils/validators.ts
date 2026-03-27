@@ -3,8 +3,11 @@ import { ZodError, ZodIssue } from 'zod';
 
 export enum UserStatus {
   ACTIVE = '업무 중',
-  REST = '휴식 중',  
-  AWAY = '자리비움'
+  METTING = '회의 중',
+  REST = '쉬는 중',  
+  AWAY = '자리 비움',
+  
+
 }
 
 // ID 유효성 검사
