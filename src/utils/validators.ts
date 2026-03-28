@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodError, ZodIssue } from 'zod';
+import { ZodError, ZodIssue } from "zod";
 
 export enum UserStatus {
-  ACTIVE = '업무 중',
-  METTING = '회의 중',
-  REST = '쉬는 중',  
-  AWAY = '자리 비움',
-  
-
+  ACTIVE = "업무 중",
+  MEETING = "회의 중",
+  REST = "쉬는 중",
+  AWAY = "자리 비움",
 }
 
 // ID 유효성 검사
@@ -22,6 +20,12 @@ export const isValidString = (value: any): boolean => {
   return !!value && typeof value === "string" && value.trim() !== "";
 };
 
+// title 길이 검사
+export const isValidTitle = (title: any): boolean => {
+  if (!isValidString(title)) return false;
+  return title.trim().length <= 50;
+};
+
 // 회원가입 유효성 검사
 export const validate = (schema: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -30,14 +34,13 @@ export const validate = (schema: any) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-       
         const errorMessage = error.issues
-          .map((issue: ZodIssue) => `${issue.path.join('.')}: ${issue.message}`)
-          .join(', ');
+          .map((issue: ZodIssue) => `${issue.path.join(".")}: ${issue.message}`)
+          .join(", ");
 
         const customError: any = new Error(errorMessage);
         customError.statusCode = 400;
-        
+
         return next(customError);
       }
       next(error);
@@ -48,34 +51,38 @@ export const validate = (schema: any) => {
 export const isValidTeamName = (name: any): boolean => {
   if (!isValidString(name)) return false;
   const trimmed = name.trim();
-  return trimmed.length >= 2 && trimmed.length <= 30; 
+  return trimmed.length >= 2 && trimmed.length <= 30;
 };
 
 // PIN 번호 유효성 검사 (숫자 6자리)
 export const isValidPin = (pin: any): boolean => {
   if (!isValidString(pin)) return false;
-  const pinRegex = /^\d{6}$/; 
+  const pinRegex = /^\d{6}$/;
   return pinRegex.test(pin);
 };
 
 // 포지션 유효성 검사 (최대 20자)
 export const isValidPosition = (position: any): boolean => {
   if (!isValidString(position)) return false;
-  return position.trim().length <= 20; 
+  return position.trim().length <= 20;
 };
 
-// 제목: 1~100자 사이 
+// 제목: 1~100자 사이
 export const isValidArchiveTitle = (title: string): boolean => {
-    return typeof title === 'string' && title.trim().length >= 1 && title.trim().length <= 100;
+  return (
+    typeof title === "string" &&
+    title.trim().length >= 1 &&
+    title.trim().length <= 100
+  );
 };
 
 // 내용(회의록): 최소 1자 이상
 export const isValidArchiveContent = (content: string): boolean => {
-    return typeof content === 'string' && content.trim().length >= 1;
+  return typeof content === "string" && content.trim().length >= 1;
 };
 
-// URL 형식 체크 (링크용) 
+// URL 형식 체크 (링크용)
 export const isValidUrl = (url: string): boolean => {
-    const urlPattern = /^(https?:\/\/)?([\w\d\-_]+\.)+[\w\d\-_]+(\/.*)?$/i;
-    return urlPattern.test(url);
+  const urlPattern = /^(https?:\/\/)?([\w\d\-_]+\.)+[\w\d\-_]+(\/.*)?$/i;
+  return urlPattern.test(url);
 };

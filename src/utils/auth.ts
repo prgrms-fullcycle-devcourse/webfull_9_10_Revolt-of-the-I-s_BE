@@ -11,6 +11,15 @@ declare global {
         uuid: string;
         email: string;
       };
+      verifiedTeamId?: number;
+      taskInfo?: {
+        id: number;
+        task_number: number;
+        team_id: number;
+        status: "Todo" | "Doing" | "Done" | "Checked";
+        requester_id: string;
+        worker_id: string | null;
+      };
     }
   }
 }

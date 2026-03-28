@@ -9,7 +9,6 @@ import {
   updateCommentById,
   existsCommentById,
   deleteCommentById,
-  findTaskOwner,
   updateTaskStatusByTask,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
@@ -19,7 +18,7 @@ import catchAsync, {
   INVALID_STATUS_ERROR,
   SUCCESS,
 } from "../utils/response";
-import { isValidId, isValidString } from "../utils/validators";
+import { isValidId, isValidString, isValidTitle } from "../utils/validators";
 
 interface TaskQuantity {
   Todo: number;
@@ -41,25 +40,6 @@ const getTeamTasksData = async (teamId: number) => {
   );
 
   return { taskQuantity, tasks };
-};
-
-// task 조회 + 유효성 검사
-const getValidatedTask = async (
-  taskId: string | string[] | undefined,
-  res: Response,
-) => {
-  if (!isValidId(taskId)) {
-    res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
-    return null;
-  }
-
-  const task = await findTaskOwner(Number(taskId));
-  if (!task) {
-    res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
-    return null;
-  }
-
-  return task;
 };
 
 // 상태 변경 처리
@@ -115,7 +95,7 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
   const { teamId } = req.params;
   const { title, content, worker_id } = req.body;
 
-  if (!isValidId(teamId) || !isValidString(title) || !isValidString(content)) {
+  if (!isValidId(teamId) || !isValidTitle(title) || !isValidString(content)) {
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
   }
 
@@ -153,10 +133,6 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
 const getTaskDetail = catchAsync(async (req: Request, res: Response) => {
   const { taskId } = req.params;
 
-  if (!isValidId(taskId)) {
-    return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
-  }
-
   const task = await findTaskById(Number(taskId));
   if (!task) {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
@@ -167,26 +143,14 @@ const getTaskDetail = catchAsync(async (req: Request, res: Response) => {
 
 // 테스크 삭제
 const deleteTask = catchAsync(async (req: Request, res: Response) => {
-  const { taskId } = req.params;
-
-  if (!isValidId(taskId)) {
-    return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
-  }
-
-  const task = await findTaskOwner(Number(taskId));
-
-  if (!task) {
-    return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
-  }
-
+  const task = req.taskInfo!; // findTaskOwner 대신
   const requesterId = req.user!.uuid;
 
   if (task.requester_id !== requesterId) {
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
   }
 
-  await deleteTaskById(Number(taskId));
-
+  await deleteTaskById(task.id);
   res
     .status(StatusCodes.OK)
     .json(SUCCESS({ message: "성공적으로 삭제되었습니다." }));
@@ -195,10 +159,7 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
 // 테스크 상태 변경
 // 수락 Todo → Doing (담당자)
 const acceptTask = catchAsync(async (req: Request, res: Response) => {
-  const { taskId } = req.params;
-
-  const task = await getValidatedTask(taskId, res);
-  if (!task) return;
+  const task = req.taskInfo!;
 
   if (task.status !== "Todo") {
     return res
@@ -212,7 +173,7 @@ const acceptTask = catchAsync(async (req: Request, res: Response) => {
   }
 
   const updated = await statusChange(
-    Number(taskId),
+    task.id,
     userId,
     "Todo",
     "Doing",
@@ -230,10 +191,7 @@ const acceptTask = catchAsync(async (req: Request, res: Response) => {
 
 // 제출 Doing → Done (담당자)
 const submitTask = catchAsync(async (req: Request, res: Response) => {
-  const { taskId } = req.params;
-
-  const task = await getValidatedTask(taskId, res);
-  if (!task) return;
+  const task = req.taskInfo!;
 
   if (task.status !== "Doing") {
     return res
@@ -247,7 +205,7 @@ const submitTask = catchAsync(async (req: Request, res: Response) => {
   }
 
   const updated = await statusChange(
-    Number(taskId),
+    task.id,
     userId,
     "Doing",
     "Done",
@@ -265,10 +223,7 @@ const submitTask = catchAsync(async (req: Request, res: Response) => {
 
 // 승인 Done → Checked (요청자)
 const confirmTask = catchAsync(async (req: Request, res: Response) => {
-  const { taskId } = req.params;
-
-  const task = await getValidatedTask(taskId, res);
-  if (!task) return;
+  const task = req.taskInfo!;
 
   if (task.status !== "Done") {
     return res
@@ -282,7 +237,7 @@ const confirmTask = catchAsync(async (req: Request, res: Response) => {
   }
 
   const updated = await statusChange(
-    Number(taskId),
+    task.id,
     userId,
     "Done",
     "Checked",
@@ -300,10 +255,7 @@ const confirmTask = catchAsync(async (req: Request, res: Response) => {
 
 // 반려 Done → Doing (요청자)
 const rejectTask = catchAsync(async (req: Request, res: Response) => {
-  const { taskId } = req.params;
-
-  const task = await getValidatedTask(taskId, res);
-  if (!task) return;
+  const task = req.taskInfo!;
 
   if (task.status !== "Done") {
     return res
@@ -317,7 +269,7 @@ const rejectTask = catchAsync(async (req: Request, res: Response) => {
   }
 
   const updated = await statusChange(
-    Number(taskId),
+    task.id,
     userId,
     "Done",
     "Doing",
@@ -338,7 +290,7 @@ const createComment = catchAsync(async (req: Request, res: Response) => {
   const { taskId } = req.params;
   const { content } = req.body;
 
-  if (!isValidId(taskId) || !isValidString(content)) {
+  if (!isValidString(content)) {
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
   }
 

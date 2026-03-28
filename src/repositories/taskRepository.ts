@@ -297,13 +297,3 @@ export const existsCommentById = async (commentId: number) => {
   );
   return result.rows[0] ?? null;
 };
-
-// 팀 검증 + 상태 검증
-export const findTaskOwner = async (taskId: number) => {
-  const result = await pool.query(
-    `SELECT id, task_number, team_id, status, requester_id, worker_id 
-     FROM tasks WHERE id = $1`,
-    [taskId],
-  );
-  return result.rows[0] ?? null;
-};
