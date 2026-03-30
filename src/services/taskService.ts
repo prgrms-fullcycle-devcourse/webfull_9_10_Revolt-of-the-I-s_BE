@@ -137,7 +137,6 @@ const getTaskDetail = catchAsync(async (req: Request, res: Response) => {
   if (!task) {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
-
   res.status(StatusCodes.OK).json(SUCCESS(task));
 });
 
@@ -357,13 +356,16 @@ const deleteComment = catchAsync(async (req: Request, res: Response) => {
 // 팀 활동 로그 조회
 const getTeamLogs = catchAsync(async (req: Request, res: Response) => {
   const { teamId } = req.params;
+  const { my } = req.query;
 
   if (!isValidId(teamId)) {
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
   }
 
-  const logs = await findLogsByTeam(Number(teamId));
+  // userId 쿼리 파라미터가 있으면 해당 유저 로그만 조회
+  const filterUserId = my === "true" ? req.user!.uuid : undefined;
 
+  const logs = await findLogsByTeam(Number(teamId), filterUserId);
   res.status(StatusCodes.OK).json(SUCCESS(logs));
 });
 

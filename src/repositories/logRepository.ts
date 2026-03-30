@@ -30,7 +30,10 @@ export const insertLog = async (input: InsertLogInput): Promise<void> => {
   );
 };
 
-export const findLogsByTeam = async (teamId: number): Promise<LogRow[]> => {
+export const findLogsByTeam = async (
+  teamId: number,
+  userId?: string,
+): Promise<LogRow[]> => {
   const result = await pool.query(
     `SELECT
       l.id, l.team_id, l.user_id, l.task_id,
@@ -43,8 +46,9 @@ export const findLogsByTeam = async (teamId: number): Promise<LogRow[]> => {
      FROM logs l
      JOIN users u ON l.user_id = u.uuid
      WHERE l.team_id = $1
+     ${userId ? "AND l.user_id = $2" : ""}
      ORDER BY l.created_at DESC`,
-    [teamId],
+    userId ? [teamId, userId] : [teamId],
   );
   return result.rows;
 };

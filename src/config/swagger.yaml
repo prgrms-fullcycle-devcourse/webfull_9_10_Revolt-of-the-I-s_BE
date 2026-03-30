@@ -680,6 +680,8 @@ paths:
     get:
       tags: [Tasks]
       summary: 테스크 목록 조회 (Board용)
+      security:
+        - BearerAuth: []
       description: 팀의 모든 테스크와 상태별 개수, 댓글 개수를 반환합니다.
       parameters:
         - $ref: "#/components/parameters/teamId"
@@ -708,6 +710,8 @@ paths:
     post:
       tags: [Tasks]
       summary: 테스크 생성
+      security:
+        - BearerAuth: []
       description: 새로운 테스크를 생성하고 담당자에게 알림을 보냅니다.
       parameters:
         - $ref: "#/components/parameters/teamId"
@@ -748,6 +752,8 @@ paths:
     get:
       tags: [Tasks]
       summary: 테스크 상세 조회
+      security:
+        - BearerAuth: []
       description: 테스크 내용과 댓글 목록을 함께 조회합니다.
       parameters:
         - $ref: "#/components/parameters/taskId"
@@ -769,6 +775,8 @@ paths:
     delete:
       tags: [Tasks]
       summary: 테스크 삭제
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/taskId"
       responses:
@@ -941,6 +949,8 @@ paths:
     post:
       tags: [Comments]
       summary: 댓글 작성
+      security:        
+        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/taskId"
       requestBody:
@@ -973,6 +983,8 @@ paths:
     patch:
       tags: [Comments]
       summary: 댓글 수정
+      security:        
+        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/commentId"
       requestBody:
@@ -1004,6 +1016,8 @@ paths:
     delete:
       tags: [Comments]
       summary: 댓글 삭제
+      security:        
+        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/commentId"
       responses:
@@ -1020,8 +1034,18 @@ paths:
     get:
       tags: [Logs]
       summary: 팀 활동 로그 조회
+      description: 팀의 활동 로그를 최신순으로 조회합니다. my=true 시 본인 로그만 반환합니다.
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/teamId"
+        - name: my
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: "true 시 본인 로그만 반환"
+          example: true
       responses:
         "200":
           description: 활동 로그 목록 반환
@@ -1036,7 +1060,19 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/LogResponse"
-
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          description: 유효하지 않은 teamId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                data: null
+                meta: null
+                error: "유효하지 않은 ID입니다."
   #   # ──────────────────────────────────────────
   #   # 6. Archives
   #   # ──────────────────────────────────────────
