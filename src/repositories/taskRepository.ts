@@ -281,7 +281,7 @@ export const updateTaskStatusByTask = async (
 ): Promise<UpdatedTaskStatusRow | null> => {
   const result = await pool.query(
     `UPDATE tasks SET status = $1 
-     WHERE id = $2 AND status = $3  -- 현재 상태가 맞을 때만 변경
+     WHERE id = $2 AND status = $3
      RETURNING id, task_number, team_id, title, status, requester_id, worker_id`,
     [nextStatus, taskId, currentStatus],
   );
@@ -294,16 +294,6 @@ export const existsCommentById = async (commentId: number) => {
   const result = await pool.query(
     `SELECT id, task_id, user_id FROM comments WHERE id = $1`,
     [commentId],
-  );
-  return result.rows[0] ?? null;
-};
-
-// 팀 검증 + 상태 검증
-export const findTaskOwner = async (taskId: number) => {
-  const result = await pool.query(
-    `SELECT id, task_number, team_id, status, requester_id, worker_id 
-     FROM tasks WHERE id = $1`,
-    [taskId],
   );
   return result.rows[0] ?? null;
 };
