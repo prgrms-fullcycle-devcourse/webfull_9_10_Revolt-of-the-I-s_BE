@@ -16,17 +16,17 @@ router.use(authMiddleware);
 
 // GET
 // 팀 목록 전체 조회 
-router.get('/', teamMemberMiddleware, getAllTeams);
+router.get('/', getAllTeams);
 
 // 홣동 중인 팀원 목록
 router.get('/:teamId/members/active', teamMemberMiddleware, getActiveMembers);
 
 // POST
 // 팀 생성
-router.post('/', teamMemberMiddleware, createTeam);
+router.post('/', createTeam);
 
 // 팀 가입/입장
-router.post('/:teamId/members', teamMemberMiddleware, joinTeam);
+router.post('/:teamId/members', joinTeam);
 
 // PATCH
 // 팀내 포지션 수정 
