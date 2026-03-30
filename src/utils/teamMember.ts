@@ -26,7 +26,7 @@ export const teamMemberMiddleware = catchAsync(
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
       }
       teamId = taskResult.rows[0].team_id;
-      (req as any).taskInfo = taskResult.rows[0];
+      req.taskInfo = taskResult.rows[0];
     } else if (commentId) {
       const commentResult = await pool.query(
         `SELECT t.team_id FROM comments c
@@ -41,7 +41,7 @@ export const teamMemberMiddleware = catchAsync(
     } else if (archiveId || linkId || docId) {
       const id = archiveId || docId || linkId;
       const result = await pool.query(
-        `SELECT team_id FROM archives WHERE uuid = $1`,
+        `SELECT team_id FROM archives WHERE id = $1`,
         [id],
       );
       if (result.rows.length === 0) {
@@ -62,7 +62,7 @@ export const teamMemberMiddleware = catchAsync(
       return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
     }
 
-    (req as any).verifiedTeamId = teamId;
+    req.verifiedTeamId = teamId;
 
     next();
   },

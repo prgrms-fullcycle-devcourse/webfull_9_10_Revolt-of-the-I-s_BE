@@ -23,7 +23,8 @@ export const isValidString = (value: any): boolean => {
 // title 길이 검사
 export const isValidTitle = (title: any): boolean => {
   if (!isValidString(title)) return false;
-  return title.trim().length <= 50;
+  const trimmed = title.trim();
+  return trimmed.length >= 1 && trimmed.length <= 50;
 };
 
 // 회원가입 유효성 검사

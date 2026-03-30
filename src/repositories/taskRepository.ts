@@ -281,7 +281,7 @@ export const updateTaskStatusByTask = async (
 ): Promise<UpdatedTaskStatusRow | null> => {
   const result = await pool.query(
     `UPDATE tasks SET status = $1 
-     WHERE id = $2 AND status = $3  -- 현재 상태가 맞을 때만 변경
+     WHERE id = $2 AND status = $3
      RETURNING id, task_number, team_id, title, status, requester_id, worker_id`,
     [nextStatus, taskId, currentStatus],
   );
