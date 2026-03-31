@@ -53,7 +53,7 @@ export const login = async (loginData: any): Promise<{ token: string; user: any 
     }
 
     const token = jwt.sign(
-        { id: user.uuid, email: user.email },
+        { id: user.uuid, email: user.email, name: user.name },
         JWT_SECRET!,
         { expiresIn: '1h' }
     );
@@ -90,7 +90,7 @@ export const googleLogin = async (idToken: string): Promise<{ token: string }> =
             uuid: newUserUuid
         };
 
-        await userRepo.signup(signupData);
+        await userRepo.signupByGoogle(signupData);
         
         user = { 
             uuid: newUserUuid, 

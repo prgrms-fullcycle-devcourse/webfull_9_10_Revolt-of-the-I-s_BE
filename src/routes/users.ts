@@ -24,6 +24,7 @@ router.get("/me", authMiddleware, catchAsync(async (req: any, res: Response) => 
       data: {
         uuid: user?.uuid,
         email: user?.email,
+        name: user?.name,
       },
       error: null,
     });

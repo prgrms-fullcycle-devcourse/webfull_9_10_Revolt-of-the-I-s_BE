@@ -43,7 +43,24 @@ export const patchByEmail = async (uuid: string, teamId: number, status: string)
     return rows[0] || null;
 };
 
-export const createUser = async (userData: any): Promise<number> => {
+export const signupByGoogle = async (userData: any): Promise<number> => {
+    const sql = `
+        INSERT INTO users (uuid, email, password, name, phone, github_url, profile_image, google_uid) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        RETURNING uuid
+    `;
 
-    return 1
+    const params = [
+        userData.uuid,
+        userData.email,
+        userData.password,
+        userData.name,
+        userData.phone,
+        userData.github_url || null,
+        userData.profile_image || null,
+        userData.google_uid || null
+    ];
+    const { rows } = await pool.query(sql, params);
+
+    return userData.uuid;
 };
