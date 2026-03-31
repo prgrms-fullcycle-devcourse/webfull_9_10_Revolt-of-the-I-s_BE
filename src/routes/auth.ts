@@ -61,6 +61,7 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
           token: result.token,
           user: {
             uuid: result.user.uuid,
+            email: result.user.email,
             name: result.user.name,
             profile_image: null
           },

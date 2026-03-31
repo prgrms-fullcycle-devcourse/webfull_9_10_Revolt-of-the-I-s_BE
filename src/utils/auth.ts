@@ -10,6 +10,7 @@ declare global {
       user?: {
         uuid: string;
         email: string;
+        name: string;
       };
     }
   }
@@ -31,10 +32,12 @@ export const authMiddleware = (
       uuid: string;
       id?: string;
       email: string;
+      name: string;
     };
     req.user = {
       uuid: decoded.uuid ?? decoded.id!,
       email: decoded.email,
+      name: decoded.name,
     };
     next();
   } catch (err) {
