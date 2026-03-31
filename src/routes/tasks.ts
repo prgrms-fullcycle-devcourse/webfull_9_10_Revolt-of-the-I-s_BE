@@ -18,69 +18,30 @@ import { teamMemberMiddleware } from "../utils/teamMember";
 
 const router: import("express").Router = express.Router();
 
+router.use(authMiddleware);
+
 // GET
-router.get("/teams/:teamId/tasks", authMiddleware, getTasksByTeam);
-router.get("/tasks/:teamId/logs", authMiddleware, getTeamLogs);
-router.get(
-  "/tasks/:taskId",
-  authMiddleware,
-  teamMemberMiddleware,
-  getTaskDetail,
-);
+router.get("/teams/:teamId/tasks", getTasksByTeam);
+router.get("/tasks/:teamId/logs", getTeamLogs);
+router.get("/tasks/:taskId", teamMemberMiddleware, getTaskDetail);
 
 // POST
-router.post("/teams/:teamId/tasks", authMiddleware, createTask);
-router.post(
-  "/tasks/:taskId/comments",
-  authMiddleware,
-  teamMemberMiddleware,
-  createComment,
-);
-router.post(
-  "/tasks/:taskId/accept",
-  authMiddleware,
-  teamMemberMiddleware,
-  acceptTask,
-);
-router.post(
-  "/tasks/:taskId/submit",
-  authMiddleware,
-  teamMemberMiddleware,
-  submitTask,
-);
-router.post(
-  "/tasks/:taskId/confirm",
-  authMiddleware,
-  teamMemberMiddleware,
-  confirmTask,
-);
-router.post(
-  "/tasks/:taskId/reject",
-  authMiddleware,
-  teamMemberMiddleware,
-  rejectTask,
-);
+router.post("/teams/:teamId/tasks", createTask);
+router.post("/tasks/:taskId/comments", teamMemberMiddleware, createComment);
+router.post("/tasks/:taskId/accept", teamMemberMiddleware, acceptTask);
+router.post("/tasks/:taskId/submit", teamMemberMiddleware, submitTask);
+router.post("/tasks/:taskId/confirm", teamMemberMiddleware, confirmTask);
+router.post("/tasks/:taskId/reject", teamMemberMiddleware, rejectTask);
 
 // PATCH
-router.patch(
-  "/tasks/comments/:commentId",
-  authMiddleware,
-  teamMemberMiddleware,
-  updateComment,
-);
+router.patch("/tasks/comments/:commentId", teamMemberMiddleware, updateComment);
 
 // DELETE
 router.delete(
-  "/tasks/:taskId",
-  authMiddleware,
-  teamMemberMiddleware,
-  deleteTask,
-);
-router.delete(
   "/tasks/comments/:commentId",
-  authMiddleware,
   teamMemberMiddleware,
   deleteComment,
 );
+router.delete("/tasks/:taskId", teamMemberMiddleware, deleteTask);
 
 export default router;
