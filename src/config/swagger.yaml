@@ -949,7 +949,7 @@ paths:
     post:
       tags: [Comments]
       summary: 댓글 작성
-      security:        
+      security:
         - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/taskId"
@@ -983,7 +983,7 @@ paths:
     patch:
       tags: [Comments]
       summary: 댓글 수정
-      security:        
+      security:
         - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/commentId"
@@ -1016,7 +1016,7 @@ paths:
     delete:
       tags: [Comments]
       summary: 댓글 삭제
-      security:        
+      security:
         - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/commentId"
@@ -1881,9 +1881,19 @@ components:
           type: string
         status:
           type: string
+        requester_id:
+          type: string
+          example: "f899a060-be9c-48d8-a5c7-539a589eb95c"
+        requester_name:
+          type: string
+          example: "홍길동"
         worker_id:
           type: string
           nullable: true
+        worker_name:
+          type: string
+          nullable: true
+          example: "가나다"
         created_at:
           type: string
           format: date-time

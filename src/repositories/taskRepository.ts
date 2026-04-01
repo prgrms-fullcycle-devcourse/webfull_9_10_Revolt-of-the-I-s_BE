@@ -8,7 +8,9 @@ export interface TaskRow {
   content: string;
   status: "Todo" | "Doing" | "Done" | "Checked";
   requester_id: string;
+  requester_name: string;
   worker_id: string | null;
+  worker_name: string | null;
   created_at: Date;
   comment_count: number;
 }
@@ -100,14 +102,18 @@ export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
       t.content,
       t.status,
       t.requester_id,
+      ru.name AS requester_name,
       t.worker_id,
+      wu.name AS worker_name,
       t.created_at,
       COALESCE(COUNT(c.id), 0)::INT AS comment_count
     FROM tasks t
     LEFT JOIN comments c ON t.id = c.task_id
+    JOIN users ru ON t.requester_id = ru.uuid
+    LEFT JOIN users wu ON t.worker_id = wu.uuid
     WHERE t.team_id = $1
     GROUP BY t.id, t.task_number, t.team_id, t.title, t.content,
-             t.status, t.requester_id, t.worker_id, t.created_at
+             t.status, t.requester_id, ru.name, t.worker_id, wu.name, t.created_at
     ORDER BY t.created_at DESC
   `;
 
