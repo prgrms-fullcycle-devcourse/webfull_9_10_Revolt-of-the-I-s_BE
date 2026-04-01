@@ -1,3 +1,4 @@
+import { PoolClient } from 'pg';
 import pool from '../config/db';
 
 //팀 목록 전체 조회 (팀 목록 포함)
@@ -22,17 +23,39 @@ export const findAllWithMembers = async (currentUserId: string) => {
 }
 
 // 팀 생성
-export const insertTeam = async (data: {
-    name: string;
-    pin_password: string;
-    owner_id: string;
-}) => {
-    const sql = `
-        INSERT INTO teams (name, pin_password, owner_id) VALUES($1, $2, $3) RETURNING *;
-    `;
-    const result = await pool.query(sql, [data.name, data.pin_password, data.owner_id]);
+export const insertTeamWithClient = async (
+  client: PoolClient,
+  data: { name: string; pin_password: string; owner_id: string }
+) => {
+  const result = await client.query(
+    `INSERT INTO teams (name, pin_password, owner_id) VALUES ($1, $2, $3) RETURNING *`,
+    [data.name, data.pin_password, data.owner_id]
+  );
+  return result.rows[0];
+};
+
+// 팀멤버 추가 (트랜잭션)
+export const insertTeamMemberWithClient = async (
+  client: PoolClient,
+  data: { team_id: number; user_id: string }
+) => {
+  await client.query(
+    `INSERT INTO team_member (team_id, user_id, position, status) VALUES ($1, $2, $3, $4)`,
+    [data.team_id, data.user_id, '팀원', '업무 중']
+  );
+};
+
+// 팀멤버 추가
+export const insertTeamMember = async ({team_id, user_id, position = "팀원", status="업무 중"}: {team_id: number; user_id: string; position?: string; status?: string;}) => {
+    const sql = `INSERT INTO team_member (team_id, user_id, position, status)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *;`;
+
+    const result = await pool.query(sql, [team_id, user_id, position, status]);
     return result.rows[0];
 }
+
+
 
 // 포지션 수정
 export const updateMemberPosition = async (teamId: number, userId: string, position: string) => {
@@ -73,16 +96,6 @@ export const deleteTeamMember = async(teamId: number, userId: string) => {
         DELETE FROM team_member WHERE team_id = $1 AND user_id = $2
     `
     return await pool.query(sql, [teamId, userId]);
-}
-
-// 팀에 멤버 추가 
-export const insertTeamMember = async ({team_id, user_id, position = "팀원", status="업무 중"}: {team_id: number; user_id: string; position?: string; status?: string;}) => {
-    const sql = `INSERT INTO team_member (team_id, user_id, position, status)
-        VALUES ($1, $2, $3, $4)
-        RETURNING *;`;
-
-    const result = await pool.query(sql, [team_id, user_id, position, status]);
-    return result.rows[0];
 }
 
 // 팀 멤버 수 조회

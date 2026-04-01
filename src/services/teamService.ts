@@ -3,9 +3,10 @@ import catchAsync, { ERROR, SUCCESS, AppError } from "../utils/response";
 import bcrypt from "bcrypt";
 import * as v from "../utils/validators";
 import { StatusCodes } from "http-status-codes";
+import { withTransaction } from "../utils/transaction";
+
 import {
   findAllWithMembers,
-  insertTeam,
   updateMemberPosition,
   findActiveMembers,
   removeTeam,
@@ -15,6 +16,8 @@ import {
   findTeamByTeamId,
   findTeamMember,
   insertTeamMember,
+  insertTeamMemberWithClient,
+  insertTeamWithClient,
 } from "../repositories/teamRepository";
 
 // GET /teams - 팀 목록 전체 조회
@@ -77,17 +80,11 @@ export const createTeam = catchAsync(
 
     const hashedPin = await bcrypt.hash(pin_password, 10);
 
-    const row = await insertTeam({
-      name: name.trim(),
-      pin_password: hashedPin,
-      owner_id: owner_id,
-    });
-
-    // TODO 트랜잭션 처리..(팀 생성 후 / 멤버 insert 전 오류경우 고려)
-
-    await insertTeamMember({
-      team_id: row.id,
-      user_id: owner_id,
+    //트랜잭션 처리(팀 생성 후 / 멤버 insert 전 오류경우 고려)
+    const row = await withTransaction(async (client) => {
+      const team = await insertTeamWithClient(client, { name, pin_password: hashedPin, owner_id });
+      await insertTeamMemberWithClient(client, { team_id: team.id, user_id: owner_id });
+      return team;
     });
 
     res.status(StatusCodes.CREATED).json(SUCCESS(row));
