@@ -34,7 +34,7 @@ export const insertTeamWithClient = async (
   return result.rows[0];
 };
 
-// 팀멤버 추가 (트랜잭션)
+// 팀멤버 추가 (트랜잭션 처리용)
 export const insertTeamMemberWithClient = async (
   client: PoolClient,
   data: { team_id: number; user_id: string }
@@ -83,31 +83,6 @@ export const findActiveMembers = async (teamId: number) => {
     return result.rows;
 }
 
-// 팀 삭제
-export const removeTeam = async (teamId: number) => {
-    const sql = `
-        DELETE FROM teams WHERE id = $1
-    `
-    return await pool.query(sql, [teamId]);
-}
-
-export const deleteTeamMember = async(teamId: number, userId: string) => {
-    const sql = `
-        DELETE FROM team_member WHERE team_id = $1 AND user_id = $2
-    `
-    return await pool.query(sql, [teamId, userId]);
-}
-
-// 팀 멤버 수 조회
-export const countTeamMembers = async (teamId: number) => {
-    const sql = `
-        SELECT COUNT(*) as count 
-        FROM team_member 
-        WHERE team_id = $1
-    `;
-    const result = await pool.query(sql, [teamId]);
-    return parseInt(result.rows[0].count, 10);
-};
 
 // 팀이름으로 검색 - 없으면 undefined
 export const findTeamByName = async (name: string) => {
@@ -116,6 +91,38 @@ export const findTeamByName = async (name: string) => {
     const result = await pool.query(sql, [name]);
     return result.rows[0]; //없으면 undefined
 }
+
+// 팀 멤버 삭제
+export const deleteTeamMemberWithClient = async (
+  client: PoolClient,
+  teamId: number,
+  userId: string
+) => {
+  await client.query(
+    `DELETE FROM team_member WHERE team_id = $1 AND user_id = $2`,
+    [teamId, userId]
+  );
+};
+
+// 멤버 수 조회
+export const countTeamMembersWithClient = async (
+  client: PoolClient,
+  teamId: number
+) => {
+  const result = await client.query(
+    `SELECT COUNT(*) as count FROM team_member WHERE team_id = $1`,
+    [teamId]
+  );
+  return parseInt(result.rows[0].count, 10);
+};
+
+// 팀 삭제
+export const removeTeamWithClient = async (
+  client: PoolClient,
+  teamId: number
+) => {
+  await client.query(`DELETE FROM teams WHERE id = $1`, [teamId]);
+};
 
 // 팀id로 검색 - 없으면 undefined
 export const findTeamByTeamId = async (teamId: number) => {

@@ -9,15 +9,15 @@ import {
   findAllWithMembers,
   updateMemberPosition,
   findActiveMembers,
-  removeTeam,
-  deleteTeamMember,
-  countTeamMembers,
   findTeamByName,
   findTeamByTeamId,
   findTeamMember,
   insertTeamMember,
   insertTeamMemberWithClient,
   insertTeamWithClient,
+  deleteTeamMemberWithClient,
+  countTeamMembersWithClient,
+  removeTeamWithClient,
 } from "../repositories/teamRepository";
 
 // GET /teams - 팀 목록 전체 조회
@@ -97,13 +97,16 @@ export const leaveTeam = catchAsync(
     const userId = req.user!.uuid;
     const teamId = req.verifiedTeamId!;
 
-    await deleteTeamMember(teamId, userId);
+  await withTransaction(async (client) => {
+    // 멤버 삭제
+    await deleteTeamMemberWithClient(client, teamId, userId);
 
-    //아무도 안남았다면 팀 삭제
-    const memberCount = await countTeamMembers(teamId);
+    // 남은 멤버 없으면 팀 삭제
+    const memberCount = await countTeamMembersWithClient(client, teamId);
     if (memberCount === 0) {
-      await removeTeam(teamId);
+      await removeTeamWithClient(client, teamId);
     }
+  });
 
     res.status(200).json(SUCCESS({ message: "성공적으로 처리되었습니다." }));
   },
