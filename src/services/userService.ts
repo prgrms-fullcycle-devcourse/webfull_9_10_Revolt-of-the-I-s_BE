@@ -1,6 +1,7 @@
 import * as userRepo from '../repositories/userRepository';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { AppError } from "../utils/response";
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
 import pusher from '../config/pusher';
@@ -11,13 +12,6 @@ const JWT_SECRET = process.env.JWT_SECRET
 export interface ServiceError {
     statusCode: number;
     message: string;
-}
-
-class AppError extends Error {
-  constructor(public statusCode: number, public message: string) {
-    super(message);
-    this.statusCode = statusCode;
-  }
 }
 
 // --- [회원가입 로직] ---
