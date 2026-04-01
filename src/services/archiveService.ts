@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import catchAsync, { SUCCESS, ERROR } from "../utils/response";
+import catchAsync, { SUCCESS, ERROR, AppError } from "../utils/response";
 import { StatusCodes } from "http-status-codes";
 import { findTeamMember } from "../repositories/teamRepository";
 import { deleteFileFromS3 } from "../utils/s3";
@@ -12,15 +12,6 @@ import {
   deleteById,
 } from "../repositories/archiveRepository";
 
-// 에러 응답 형식
-const sendError = (res: Response, statusCode: number, message: string) => {
-  return res.status(statusCode).json({
-    success: false,
-    data: null,
-    meta: null,
-    error: message,
-  });
-};
 
 // =========== 회의록 ===========
 
@@ -41,18 +32,10 @@ export const createMeeting = catchAsync(async (req: Request, res: Response) => {
   const teamId = req.verifiedTeamId!;
 
   if (!v.isValidArchiveTitle(title)) {
-    return sendError(
-      res,
-      StatusCodes.BAD_REQUEST,
-      "제목은 1~100자 사이로 입력해주세요.",
-    );
+    throw new AppError(400, "제목은 1~100자 사이로 입력해주세요");
   }
   if (!v.isValidArchiveContent(content)) {
-    return sendError(
-      res,
-      StatusCodes.BAD_REQUEST,
-      "회의록 본문을 입력해주세요.",
-    );
+    throw new AppError(400, "회의록 본문을 입력해주세요.");
   }
 
   const newMeeting = await create({
@@ -89,11 +72,7 @@ export const updateMeeting = catchAsync(async (req: Request, res: Response) => {
   }
 
   if (title && !v.isValidArchiveTitle(title)) {
-    return sendError(
-      res,
-      StatusCodes.BAD_REQUEST,
-      "제목은 1~100자 사이여야 합니다.",
-    );
+    throw new AppError(400, "제목은 1~100자 사이여야 합니다.");
   }
 
   const updated = await update(archiveId, {
@@ -137,18 +116,10 @@ export const createLink = catchAsync(async (req: Request, res: Response) => {
   const teamId = req.verifiedTeamId!;
 
   if (!v.isValidArchiveTitle(title)) {
-    return sendError(
-      res,
-      StatusCodes.BAD_REQUEST,
-      "링크 이름은 1~100자 사이여야 합니다.",
-    );
+    throw new AppError(400, "링크 이름은 1~100자 사이여야 합니다.");
   }
   if (!v.isValidUrl(content)) {
-    return sendError(
-      res,
-      StatusCodes.BAD_REQUEST,
-      "올바른 URL 형식을 입력해주세요.",
-    );
+    throw new AppError(400, "올바른 URL 형식을 입력해주세요");
   }
 
   const newLink = await create({
@@ -193,11 +164,7 @@ export const createDocument = catchAsync(
     const teamId = req.verifiedTeamId!;
 
     if (!req.file)
-      return sendError(
-        res,
-        StatusCodes.BAD_REQUEST,
-        "업로드된 파일이 없습니다.",
-      );
+      throw new AppError(400, "업로드된 파일이 없습니다.");
 
     const fileUrl = (req.file as any).location;
     const fileName = req.body.title || req.file.originalname;
@@ -220,11 +187,7 @@ export const deleteDocument = catchAsync(
     const archive = await findById(archiveId);
 
     if (!archive)
-      return sendError(
-        res,
-        StatusCodes.NOT_FOUND,
-        "해당 문서를 찾을 수 없습니다.",
-      );
+      throw new AppError(404, "해당 문서를 찾을 수 없습니다.");
 
     // S3 버킷 내 삭제
     if (archive.type === "PDF" && archive.content) {

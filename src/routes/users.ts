@@ -1,18 +1,11 @@
 import express from "express";
-import catchAsync from "../utils/response";
+import catchAsync, { AppError } from "../utils/response";
 import * as userService from "../services/userService";
 import { Router, Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../utils/auth";
 import { UserStatus } from "../utils/validators"
 
 const router: import("express").Router = express.Router();
-
-class AppError extends Error {
-  constructor(public statusCode: number, public message: string) {
-    super(message);
-    Object.setPrototypeOf(this, AppError.prototype);
-  }
-}
 
 // GET
 router.get("/me", authMiddleware, catchAsync(async (req: any, res: Response) => {

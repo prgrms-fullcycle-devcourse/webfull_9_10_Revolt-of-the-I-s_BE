@@ -6,6 +6,13 @@ const catchAsync = (fn: any) => {
   };
 };
 
+export class AppError extends Error {
+  constructor(public statusCode: number, public message: string) {
+    super(message);
+    Object.setPrototypeOf(this, AppError.prototype);
+  }
+}
+
 // 성공 응답
 export const SUCCESS = (data: any = null) => ({
   success: true,

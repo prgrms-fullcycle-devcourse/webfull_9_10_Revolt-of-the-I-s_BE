@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import catchAsync, { ERROR, SUCCESS } from "../utils/response";
+import catchAsync, { ERROR, SUCCESS, AppError } from "../utils/response";
 import bcrypt from "bcrypt";
 import * as v from "../utils/validators";
 import { StatusCodes } from "http-status-codes";
@@ -64,20 +64,10 @@ export const createTeam = catchAsync(
 
     // 유효성 검사
     if (!v.isValidTeamName(name)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "팀 이름은 2자 이상 30자 이하로 입력해주세요.",
-      });
+      throw new AppError(400, "팀 이름은 2자 이상 30자 이하로 입력해주세요.");
     }
     if (!v.isValidPin(pin_password)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "핀 번호는 6자리 숫자여야 합니다.",
-      });
+      throw new AppError(400, "핀 번호는 6자리 숫자여야 합니다.");
     }
     // name 중복 확인
     const team = await findTeamByName(name);
@@ -146,12 +136,7 @@ export const joinTeam = catchAsync(
 
     // 신규 가입 시 PIN 번호 검증
     if (!v.isValidPin(password)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "올바른 6자리 핀 번호를 입력해주세요.",
-      });
+      throw new AppError(400, "올바른 6자리 핀 번호를 입력해주세요.");
     }
 
     const isMatch = await bcrypt.compare(password, team.pin_password);
@@ -179,12 +164,7 @@ export const updatePosition = catchAsync(
     const teamId = req.verifiedTeamId!;
 
     if (!v.isValidPosition(position)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        data: null,
-        meta: null,
-        error: "포지션은 1~20자 이내로 입력해주세요.",
-      });
+      throw new AppError(400, "포지션은 1~20자 이내로 입력해주세요.");
     }
 
     const updatedMember = await updateMemberPosition(

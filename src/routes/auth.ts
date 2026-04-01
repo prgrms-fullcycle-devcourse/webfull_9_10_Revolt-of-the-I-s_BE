@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import catchAsync from "../utils/response";
+import catchAsync, { AppError } from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
 import { validate } from "../utils/validators";
@@ -14,13 +14,6 @@ const signupSchema = z.object({
     .regex(/[a-zA-Z]/, "영문자가 포함되어야 합니다.")
     .regex(/[0-9]/, "숫자가 포함되어야 합니다."),
 });
-
-class AppError extends Error {
-  constructor(public statusCode: number, public message: string) {
-    super(message);
-    Object.setPrototypeOf(this, AppError.prototype);
-  }
-}
 
 // --- [회원가입] ---
 router.post("/signup", 
