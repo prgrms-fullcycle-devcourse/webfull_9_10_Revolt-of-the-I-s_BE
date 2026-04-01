@@ -3,18 +3,21 @@ import catchAsync, { ERROR, SUCCESS, AppError } from "../utils/response";
 import bcrypt from "bcrypt";
 import * as v from "../utils/validators";
 import { StatusCodes } from "http-status-codes";
+import { withTransaction } from "../utils/transaction";
+
 import {
   findAllWithMembers,
-  insertTeam,
   updateMemberPosition,
   findActiveMembers,
-  removeTeam,
-  deleteTeamMember,
-  countTeamMembers,
   findTeamByName,
   findTeamByTeamId,
   findTeamMember,
   insertTeamMember,
+  insertTeamMemberWithClient,
+  insertTeamWithClient,
+  deleteTeamMemberWithClient,
+  countTeamMembersWithClient,
+  removeTeamWithClient,
 } from "../repositories/teamRepository";
 
 // GET /teams - 팀 목록 전체 조회
@@ -77,17 +80,11 @@ export const createTeam = catchAsync(
 
     const hashedPin = await bcrypt.hash(pin_password, 10);
 
-    const row = await insertTeam({
-      name: name.trim(),
-      pin_password: hashedPin,
-      owner_id: owner_id,
-    });
-
-    // TODO 트랜잭션 처리..(팀 생성 후 / 멤버 insert 전 오류경우 고려)
-
-    await insertTeamMember({
-      team_id: row.id,
-      user_id: owner_id,
+    //트랜잭션 처리(팀 생성 후 / 멤버 insert 전 오류경우 고려)
+    const row = await withTransaction(async (client) => {
+      const team = await insertTeamWithClient(client, { name, pin_password: hashedPin, owner_id });
+      await insertTeamMemberWithClient(client, { team_id: team.id, user_id: owner_id });
+      return team;
     });
 
     res.status(StatusCodes.CREATED).json(SUCCESS(row));
@@ -100,13 +97,16 @@ export const leaveTeam = catchAsync(
     const userId = req.user!.uuid;
     const teamId = req.verifiedTeamId!;
 
-    await deleteTeamMember(teamId, userId);
+  await withTransaction(async (client) => {
+    // 멤버 삭제
+    await deleteTeamMemberWithClient(client, teamId, userId);
 
-    //아무도 안남았다면 팀 삭제
-    const memberCount = await countTeamMembers(teamId);
+    // 남은 멤버 없으면 팀 삭제
+    const memberCount = await countTeamMembersWithClient(client, teamId);
     if (memberCount === 0) {
-      await removeTeam(teamId);
+      await removeTeamWithClient(client, teamId);
     }
+  });
 
     res.status(200).json(SUCCESS({ message: "성공적으로 처리되었습니다." }));
   },
