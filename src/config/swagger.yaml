@@ -473,9 +473,7 @@ paths:
         이후에는 별도 절차 없이 입장합니다.
         비밀번호 오기입 시 반려됩니다.
 
-        **[로직 가이드]**
-        1. **기존 멤버 (`isMember: true`)**: `password` 존재유무 상관없이 호출해도 입장 성공.
-        2. **신규 유저 (`isMember: false`)**: 반드시 6자리 `password`를 포함해야 함.
+        **해당 팀 가입 여부 상관없이 비밀번호 입력**
       security:
         - BearerAuth: []
       parameters:
@@ -504,8 +502,7 @@ paths:
         "200":
           description: |
             팀 가입 / 입장 성공
-            - 기본 멤버: 바로 입장
-            - 신규 유저: 비밀번호 검증 후 가입 완료
+            비밀번호 검증 후 가입 완료
           content:
             application/json:
               schema:

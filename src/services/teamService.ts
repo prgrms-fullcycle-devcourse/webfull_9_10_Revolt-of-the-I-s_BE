@@ -126,14 +126,6 @@ export const joinTeam = catchAsync(
     const team = await findTeamByTeamId(teamId);
     if (!team) return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
 
-    //가입된 팀인지
-    const member = await findTeamMember(teamId, userId);
-    if (member) {
-      return res
-        .status(StatusCodes.OK)
-        .json(SUCCESS({ message: "성공적으로 처리되었습니다." }));
-    }
-
     // 신규 가입 시 PIN 번호 검증
     if (!v.isValidPin(password)) {
       throw new AppError(400, "올바른 6자리 핀 번호를 입력해주세요.");
