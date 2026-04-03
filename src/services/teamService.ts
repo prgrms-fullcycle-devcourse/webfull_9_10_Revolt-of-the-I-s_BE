@@ -137,11 +137,14 @@ export const joinTeam = catchAsync(
       return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
     }
 
-    await insertTeamMember({
-      team_id: teamId,
-      user_id: userId,
-    });
-
+    const member = await findTeamMember(teamId, userId);
+    if(!member) {
+      await insertTeamMember({
+        team_id: teamId,
+        user_id: userId,
+      });
+    }
+  
     res
       .status(StatusCodes.CREATED)
       .json(SUCCESS({ message: "성공적으로 처리되었습니다." }));
