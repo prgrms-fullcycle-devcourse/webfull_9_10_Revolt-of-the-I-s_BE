@@ -142,10 +142,10 @@ const getTaskDetail = catchAsync(async (req: Request, res: Response) => {
 
 // 테스크 삭제
 const deleteTask = catchAsync(async (req: Request, res: Response) => {
-  const task = req.taskInfo!; // findTaskOwner 대신
+  const task = req.taskInfo!;
   const requesterId = req.user!.uuid;
 
-  if (task.requester_id !== requesterId) {
+  if (task.worker_id !== requesterId) {
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
   }
 
