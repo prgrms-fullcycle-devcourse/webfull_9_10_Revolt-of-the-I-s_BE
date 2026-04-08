@@ -772,6 +772,7 @@ paths:
     delete:
       tags: [Tasks]
       summary: 테스크 삭제
+      description: 담당자(worker)만 삭제할 수 있습니다.
       security:
         - BearerAuth: []
       parameters:
