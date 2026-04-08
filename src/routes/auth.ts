@@ -3,6 +3,7 @@ import catchAsync, { AppError } from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
 import { validate } from "../utils/validators";
+import { is } from "zod/v4/locales";
 
 const router: Router = Router();
 
@@ -93,20 +94,49 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
 
     const result = await userService.googleLogin(googleToken);
 
-    if ("token" in result) {
-      res.cookie("accessToken", result.token, {
+    if (!result.isNewUser) {
+            res.cookie("accessToken", result.token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+                maxAge: 3600000,
+            });
+            return res.status(200).json({
+                success: true,
+                isNewUser: false,
+                data: {
+                    token: result.token,
+                    user: result.user
+                }
+            });
+        }
+    return res.status(200).json({
+        success: true,
+        isNewUser: true,
+        data: {
+            user: result.user 
+        }
+    });
+  })
+);
+
+// --- [구글 회원가입] ---
+router.post("/google/signup", catchAsync(async (req: Request, res: Response) => {
+    const userData = req.body;
+
+    const result = await userService.googleSignup(userData);
+
+    res.cookie("accessToken", result.token, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
         maxAge: 3600000,
-      });
-      return res.status(200).json({ success: true });
-    }
+    });
 
-    return res.status(401).json({ message: "구글 로그인 실패" });
-  }),
-);
-
-
+    return res.status(201).json({
+        success: true,
+        data: result
+    });
+}));
 
 export default router;

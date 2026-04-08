@@ -56,50 +56,78 @@ export const login = async (loginData: any): Promise<{ token: string; user: any 
 };
 
 // --- [구글 로그인] ---
-export const googleLogin = async (idToken: string): Promise<{ token: string }> => {
+type GoogleLoginResponse = 
+    | { isNewUser: true; user: any} 
+    | { isNewUser: false; token: string; user: any }; 
 
+export const googleLogin = async (idToken: string): Promise<GoogleLoginResponse> => {
     const ticket = await client.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID!, 
+    idToken,
+    // audience: process.env.GOOGLE_CLIENT_ID!
     });
-
     const payload = ticket.getPayload();
+    
+    if (!payload) throw new AppError(401, "토큰이 유효하지 않습니다.");
 
-    if (!payload || !payload.email) {
-        const error: any = new Error("유효하지 않은 구글 토큰입니다.");
-        error.statusCode = 401;
-        throw error;
-    }
-
-    const { email, name, picture } = payload;
-
-    let user = await userRepo.findUserByEmail(email);
+    const { sub, email, name } = payload;
+    
+    const user = await userRepo.findUserByEmail(email!);
 
     if (!user) {
-        const newUserUuid = uuidv4();
-        const signupData = {
-            email,
-            name: name || 'Google User',
-            password: `GOOGLE_${newUserUuid}`,
-            uuid: newUserUuid
-        };
-
-        await userRepo.signupByGoogle(signupData);
-        
-        user = { 
-            uuid: newUserUuid, 
-            email: email,
-            name: signupData.name 
+        return {
+            isNewUser: true,
+            user: {
+                email: email!,
+                googleUid: sub,
+                name: name || 'Google User',
+            }
         };
     }
 
     const token = jwt.sign(
-        { uuid: user!.uuid, email: user!.email },
+        { uuid: user.uuid, email: user.email },
         process.env.JWT_SECRET!,
         { expiresIn: '1h' }
     );
 
-    return { token };
+    return {
+        isNewUser: false,
+        token,
+        user
+    };
+};
+
+interface googleUserData {
+    email: string;
+    googleUid: string;
+    name: string;
+    profileImage?: string;
+    github_url?: string;
+    phone: any;
+}
+
+// --- [구글 회원가입] ---
+export const googleSignup = async (userData: googleUserData) => {
+    const existingUser = await userRepo.findUserByEmail(userData.email);
+    if (existingUser) {
+        throw new AppError(409, "이미 가입된 이메일입니다.");
+    }
+
+    const newUserUuid = uuidv4();
+
+    await userRepo.signupByGoogle({
+        ...userData,
+        uuid: newUserUuid,
+        password: `GOOGLE_${newUserUuid}`,
+    });
+
+    const token = jwt.sign(
+        { uuid: newUserUuid, email: userData.email },
+        process.env.JWT_SECRET!,
+        { expiresIn: '1h' }
+    );
+
+    return { token, user: userData };
 };
 
 // 상태 수정
@@ -111,7 +139,7 @@ export const status = async (uuid: string, teamId: number, status: string): Prom
 
     pusher.trigger(`team-${teamId}`, "status-updated", {
         email: user.email,
-        status: status, // "MEETING", "AWAY" 등
+        status: status, 
         name: user.name
     });
 
