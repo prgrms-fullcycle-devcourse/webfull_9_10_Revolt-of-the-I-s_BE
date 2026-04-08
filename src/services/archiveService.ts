@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import catchAsync, { SUCCESS, ERROR, AppError } from "../utils/response";
 import { StatusCodes } from "http-status-codes";
-import { findTeamMember } from "../repositories/teamRepository";
 import { deleteFileFromS3 } from "../utils/s3";
 import * as v from "../utils/validators";
 import {
@@ -53,7 +52,7 @@ export const getMeetingDetail = catchAsync(
     const archiveId = parseInt(req.params.archiveId as string);
     const archive = await findById(archiveId);
 
-    if (!archive || archive.type !== "NOTE") {
+    if (!v.isValidArchive(archive, "NOTE")) {
       return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
 
@@ -67,8 +66,8 @@ export const updateMeeting = catchAsync(async (req: Request, res: Response) => {
   const { title, content } = req.body;
 
   const archive = await findById(archiveId);
-  if (!archive || archive.type !== "NOTE") {
-    return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
+  if (!v.isValidArchive(archive, "NOTE")) {
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
   if (title && !v.isValidArchiveTitle(title)) {
@@ -88,8 +87,8 @@ export const deleteMeeting = catchAsync(async (req: Request, res: Response) => {
   const archiveId = parseInt(req.params.archiveId as string);
 
   const archive = await findById(archiveId);
-  if (!archive || archive.type !== "NOTE") {
-    return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
+  if (!v.isValidArchive(archive, "NOTE")) {
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
   await deleteById(archiveId);
@@ -136,7 +135,7 @@ export const deleteLink = catchAsync(async (req: Request, res: Response) => {
   const linkId = parseInt(req.params.linkId as string);
   const archive = await findById(linkId);
 
-  if (!archive || archive.type !== "LINK") {
+  if (!v.isValidArchive(archive, "LINK")) {
     return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
@@ -186,9 +185,10 @@ export const deleteDocument = catchAsync(
     const archiveId = parseInt(req.params.docId as string);
     const archive = await findById(archiveId);
 
-    if (!archive)
-      throw new AppError(404, "해당 문서를 찾을 수 없습니다.");
-
+    if (!v.isValidArchive(archive, "PDF")) {
+      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
+    }
+    
     // S3 버킷 내 삭제
     if (archive.type === "PDF" && archive.content) {
       await deleteFileFromS3(archive.content);
