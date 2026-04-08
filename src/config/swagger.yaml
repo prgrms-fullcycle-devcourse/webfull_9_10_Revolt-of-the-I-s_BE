@@ -207,50 +207,158 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /auth/google:
+      post:
+        tags: [Auth]
+        summary: 구글 OAuth 로그인 / 회원가입 여부 확인
+        description: |
+          구글 토큰을 검증하여 가입 상태를 반환합니다.
+          - **isNewUser: true**: 신규 유저 (추가 정보 입력 필요)
+          - **isNewUser: false**: 기존 유저 (로그인 완료)
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [googleToken]
+                properties:
+                  googleToken:
+                    type: string
+                    description: 구글 OAuth ID 토큰
+        responses:
+          "200":
+            description: 구글 인증 결과 반환 (신규/기존 유저 구분)
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                    isNewUser:
+                      type: boolean
+                    data:
+                      type: object
+                    meta:
+                      type: object
+                      nullable: true
+                    error:
+                      type: string
+                      nullable: true
+                examples:
+                  NewUser:
+                    summary: "신규 유저 (가입 필요)"
+                    value:
+                      success: true
+                      isNewUser: true
+                      data:
+                        user:
+                          email: "indiagunyoung@gmail.com"
+                          google_uid: "11442213878801107583"
+                          name: "홍길동"
+                      meta: null
+                      error: null
+                  ExistingUser:
+                    summary: "기존 유저 (로그인 완료)"
+                    value:
+                      success: true
+                      isNewUser: false
+                      data:
+                        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        user:
+                          uuid: "9ea12eb9-7222-4bd9-a3a1-b38a4ac9ff6c"
+                          email: "jimhappy5745@gmail.com"
+                          name: "홍길동"
+                          phone: null
+                          github_url: null
+                          profile_image: null
+                          google_uid: "114412341107583"
+                      meta: null
+                      error: null
+
+  /auth/google/signup:
     post:
       tags: [Auth]
-      summary: 구글 OAuth 로그인 / 회원가입
+      summary: 구글 회원가입 완료
       description: |
-        구글 OAuth 인증을 처리합니다.
+        구글 인증 후 전달받은 정보와 유저가 추가로 입력한 정보(전화번호 등)를 합쳐 최종 회원가입을 완료합니다.
+        가입 성공 시 셋쿠키(Set-Cookie)로 `accessToken`이 설정됩니다.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [googleToken]
+              required: [email, googleUid, name]
               properties:
-                googleToken:
+                email:
                   type: string
-                  description: 구글 OAuth ID 토큰
-                  example: ya29.a0AfH6SMC...
+                  example: "indiagunyoung@gmail.com"
+                googleUid:
+                  type: string
+                  example: "114424278878801107583"
+                name:
+                  type: string
+                  example: "장건영"
+                phone:
+                  type: string
+                  nullable: true
+                  example: "010-1234-5678"
+                profileImage:
+                  type: string
+                  nullable: true
+                  example: "https://photo.jpg"
+                github_url:
+                  type: string
+                  nullable: true
+                  example: "https://github.com/..."
       responses:
-        "200":
-          description: 구글 로그인 / 회원가입 성공
+        "201":
+          description: 회원가입 성공
+          headers:
+            Set-Cookie:
+              description: accessToken이 쿠키에 저장됩니다.
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - type: object
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
                     properties:
-                      data:
+                      token:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1Ni..."
+                      user:
                         type: object
                         properties:
-                          token:
+                          uuid:
                             type: string
-                            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                          user:
-                            $ref: "#/components/schemas/UserResponse"
-                      meta:
-                        nullable: true
-                        example: null
+                            example: "550e8400-e29b..."
+                          email:
+                            type: string
+                            example: "user@gmail.com"
+                          name:
+                            type: string
+                            example: "홍길동"
+                          phone:
+                            type: string
+                            nullable: true
+                          google_uid:
+                            type: string
+                            example: "114424212324107583"
         "409":
-          description: 이미 자체 이메일로 가입된 계정
+          description: 이미 가입된 이메일
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   # # ──────────────────────────────────────────
   # # 2. Users
   # # ──────────────────────────────────────────
