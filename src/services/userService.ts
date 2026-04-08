@@ -78,7 +78,7 @@ export const googleLogin = async (idToken: string): Promise<GoogleLoginResponse>
             isNewUser: true,
             user: {
                 email: email!,
-                googleUid: sub,
+                google_uid: sub,
                 name: name || 'Google User',
             }
         };
