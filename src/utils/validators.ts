@@ -77,6 +77,11 @@ export const isValidArchiveTitle = (title: string): boolean => {
   );
 };
 
+//아카이브 타입 체크
+export const isValidArchive = (archive: any, type: string): boolean => {
+  return !!archive && archive.type === type;
+};
+
 // 내용(회의록): 최소 1자 이상
 export const isValidArchiveContent = (content: string): boolean => {
   return typeof content === "string" && content.trim().length >= 1;
