@@ -6,6 +6,7 @@ export interface UserEntity {
     email: string;
     password?: string;
     name: string;
+    googleUid ?: string | null;
 }
 
 export const signup = async (userData: any): Promise<string> => {
@@ -60,7 +61,8 @@ export const signupByGoogle = async (userData: any): Promise<number> => {
         userData.profile_image || null,
         userData.google_uid || null
     ];
-    const { rows } = await pool.query(sql, params);
+
+    await pool.query(sql, params); 
 
     return userData.uuid;
 };
