@@ -11,6 +11,7 @@ import pool from "../config/db";
 export const teamMemberMiddleware = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.uuid;
+
     const { taskId, commentId, archiveId, linkId, docId } = req.params;
 
     // 파라미터에 teamId가 있다면 미리 담아둠
@@ -19,13 +20,15 @@ export const teamMemberMiddleware = catchAsync(
     if (taskId) {
       const taskResult = await pool.query(
         `SELECT id, task_number, team_id, status, requester_id, worker_id 
-          FROM tasks WHERE id = $1`,
+          FROM tasks WHERE id = $1 AND is_deleted = false`,
         [taskId],
       );
+
       if (taskResult.rows.length === 0) {
         return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
       }
       teamId = taskResult.rows[0].team_id;
+
       req.taskInfo = taskResult.rows[0];
     } else if (commentId) {
       const commentResult = await pool.query(
