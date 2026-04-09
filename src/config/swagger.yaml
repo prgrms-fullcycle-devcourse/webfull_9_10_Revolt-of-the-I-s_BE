@@ -2044,6 +2044,9 @@ components:
           type: string
           nullable: true
           example: "가나다"
+        is_edited:              
+          type: boolean
+          example: false
         created_at:
           type: string
           format: date-time
@@ -2101,6 +2104,9 @@ components:
           type: integer
         content:
           type: string
+        is_edited:              
+          type: boolean
+          example: false
         created_at:
           type: string
           format: date-time

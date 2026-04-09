@@ -13,6 +13,7 @@ export interface TaskRow {
   worker_name: string | null;
   created_at: Date;
   comment_count: number;
+  is_edited: boolean;
 }
 
 export interface TaskUserInfo {
@@ -43,6 +44,7 @@ export interface TaskDetailRow {
   requester: TaskUserInfo;
   worker: TaskUserInfo | null;
   comments: CommentRow[];
+  is_edited: boolean;
 }
 
 export interface CreateTaskInput {
@@ -79,6 +81,7 @@ export interface UpdatedCommentRow {
   content: string;
   created_at: Date;
   user: TaskUserInfo;
+  is_edited: boolean;
 }
 
 export interface UpdatedTaskStatusRow {
@@ -89,6 +92,7 @@ export interface UpdatedTaskStatusRow {
   status: "Todo" | "Doing" | "Done" | "Checked";
   requester_id: string;
   worker_id: string | null;
+  is_edited: boolean;
 }
 
 // 팀별 Task 목록 조회
@@ -105,6 +109,7 @@ export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
       ru.name AS requester_name,
       t.worker_id,
       wu.name AS worker_name,
+      t.is_edited, 
       t.created_at,
       COALESCE(COUNT(c.id), 0)::INT AS comment_count
     FROM tasks t
@@ -113,7 +118,7 @@ export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
     LEFT JOIN users wu ON t.worker_id = wu.uuid
     WHERE t.team_id = $1 AND t.is_deleted = false
     GROUP BY t.id, t.task_number, t.team_id, t.title, t.content,
-             t.status, t.requester_id, ru.name, t.worker_id, wu.name, t.created_at
+        t.status, t.requester_id, ru.name, t.worker_id, wu.name, t.created_at, t.is_edited
     ORDER BY t.created_at DESC
   `;
 
@@ -128,7 +133,7 @@ export const findTaskById = async (
   const taskQuery = `
     SELECT
       t.id, t.task_number, t.team_id, t.title, t.content,
-      t.status, t.created_at,
+      t.status, t.is_edited, t.created_at,
       json_build_object(
         'uuid', ru.uuid,
         'name', ru.name,
@@ -205,9 +210,10 @@ export const updateTaskById = async (
      SET 
        title = COALESCE($1, title),
        content = COALESCE($2, content),
-       worker_id = COALESCE($3, worker_id)
+       worker_id = COALESCE($3, worker_id),
+       is_edited = true             
      WHERE id = $4
-     RETURNING id, task_number, team_id, title, status, requester_id, worker_id`,
+     RETURNING id, task_number, team_id, title, status, requester_id, worker_id, is_edited`,
     [data.title, data.content, data.worker_id, taskId],
   );
   return result.rows[0] ?? null;
@@ -260,8 +266,8 @@ export const updateCommentById = async (
   content: string,
 ): Promise<UpdatedCommentRow | null> => {
   const result = await pool.query(
-    `UPDATE comments SET content = $1 WHERE id = $2
-     RETURNING id, task_id, content, created_at, user_id`,
+    `UPDATE comments SET content = $1, is_edited = true WHERE id = $2
+     RETURNING id, task_id, content, created_at, user_id, is_edited`,
     [content, commentId],
   );
 
@@ -271,7 +277,7 @@ export const updateCommentById = async (
 
   const commentWithUser = await pool.query(
     `SELECT
-      c.id, c.task_id, c.content, c.created_at,
+      c.id, c.task_id, c.content, c.created_at, c.is_edited,
       json_build_object(
         'uuid', u.uuid,
         'name', u.name,
@@ -306,7 +312,7 @@ export const updateTaskStatusByTask = async (
   const result = await pool.query(
     `UPDATE tasks SET status = $1 
      WHERE id = $2 AND status = $3
-     RETURNING id, task_number, team_id, title, status, requester_id, worker_id`,
+     RETURNING id, task_number, team_id, title, status, requester_id, worker_id, is_edited`,
     [nextStatus, taskId, currentStatus],
   );
 
