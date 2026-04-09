@@ -20,6 +20,7 @@ import catchAsync, {
   SUCCESS,
 } from "../utils/response";
 import { isValidId, isValidString, isValidTitle } from "../utils/validators";
+import { insertNotification } from "../repositories/notificationRepository";
 
 interface TaskQuantity {
   Todo: number;
@@ -125,6 +126,15 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
       taskNumber: task.task_number,
       teamId: task.team_id,
     });
+
+    // 알림 저장
+    await insertNotification({
+      userId: task.worker_id,
+      teamId: task.team_id,
+      taskId: task.id,
+      type: "NEW_TASK",
+      message: `🔔 #${task.task_number} 새로운 요청이 있습니다: ${task.title}`,
+    });
   }
 
   res.status(StatusCodes.CREATED).json(SUCCESS(task));
@@ -161,6 +171,16 @@ const updateTask = catchAsync(async (req: Request, res: Response) => {
     message: `#${task.task_number} 요청 수정`,
   });
 
+  if (task.worker_id) {
+    await insertNotification({
+      userId: task.worker_id,
+      teamId: task.team_id,
+      taskId: task.id,
+      type: "TASK_UPDATED",
+      message: `🚨 #${task.task_number} 요청이 수정되었습니다.`,
+    });
+  }
+
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
 
@@ -192,6 +212,14 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
     taskId: task.id,
     actionType: "DELETE",
     message: `#${task.task_number} 요청 삭제`,
+  });
+
+  await insertNotification({
+    userId: task.requester_id,
+    teamId: task.team_id,
+    taskId: task.id,
+    type: "TASK_DELETED",
+    message: `❌ #${task.task_number} 요청이 삭제되었습니다.`,
   });
 
   res
@@ -229,6 +257,14 @@ const acceptTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.CONFLICT).json(ERROR.CONFLICT);
   }
 
+  await insertNotification({
+    userId: task.requester_id,
+    teamId: task.team_id,
+    taskId: task.id,
+    type: "STATUS_CHANGED",
+    message: `🆗 #${task.task_number} 요청이 수락되었습니다.`,
+  });
+
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
 
@@ -260,6 +296,14 @@ const submitTask = catchAsync(async (req: Request, res: Response) => {
   if (!updated) {
     return res.status(StatusCodes.CONFLICT).json(ERROR.CONFLICT);
   }
+
+  await insertNotification({
+    userId: task.requester_id,
+    teamId: task.team_id,
+    taskId: task.id,
+    type: "STATUS_CHANGED",
+    message: `✅ #${task.task_number} 요청이 완료 제출되었습니다.`,
+  });
 
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
@@ -293,6 +337,14 @@ const confirmTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.CONFLICT).json(ERROR.CONFLICT);
   }
 
+  await insertNotification({
+    userId: task.worker_id!,
+    teamId: task.team_id,
+    taskId: task.id,
+    type: "STATUS_CHANGED",
+    message: `👍 #${task.task_number} 요청이 최종 승인되었습니다.`,
+  });
+
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
 
@@ -325,6 +377,14 @@ const rejectTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.CONFLICT).json(ERROR.CONFLICT);
   }
 
+  await insertNotification({
+    userId: task.worker_id!,
+    teamId: task.team_id,
+    taskId: task.id,
+    type: "STATUS_CHANGED",
+    message: `🙏 #${task.task_number} 요청이 반려되었습니다.`,
+  });
+
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
 
@@ -340,8 +400,22 @@ const createComment = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.uuid;
 
   const comment = await insertComment(Number(taskId), userId, content.trim());
-
   await pusher.trigger(`task-${taskId}`, "new-comment", comment);
+
+  const taskInfo = req.taskInfo!;
+  const recipients = [taskInfo.requester_id, taskInfo.worker_id].filter(
+    (id) => id && id !== userId, // 본인 제외
+  );
+
+  for (const recipientId of recipients) {
+    await insertNotification({
+      userId: recipientId!,
+      teamId: taskInfo.team_id,
+      taskId: taskInfo.id,
+      type: "NEW_COMMENT",
+      message: `💬 #${taskInfo.task_number} 요청에 새로운 댓글이 달렸습니다.`,
+    });
+  }
 
   res.status(StatusCodes.CREATED).json(SUCCESS(comment));
 });

@@ -30,6 +30,8 @@ tags:
     description: 아카이브 및 링크
   - name: Logs
     description: 팀 활동 로그
+  - name: Notifications
+    description: 알림 시스템
 
 paths:
   # # ──────────────────────────────────────────
@@ -207,74 +209,74 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /auth/google:
-      post:
-        tags: [Auth]
-        summary: 구글 OAuth 로그인 / 회원가입 여부 확인
-        description: |
-          구글 토큰을 검증하여 가입 상태를 반환합니다.
-          - **isNewUser: true**: 신규 유저 (추가 정보 입력 필요)
-          - **isNewUser: false**: 기존 유저 (로그인 완료)
-        requestBody:
-          required: true
+    post:
+      tags: [Auth]
+      summary: 구글 OAuth 로그인 / 회원가입 여부 확인
+      description: |
+        구글 토큰을 검증하여 가입 상태를 반환합니다.
+        - **isNewUser: true**: 신규 유저 (추가 정보 입력 필요)
+        - **isNewUser: false**: 기존 유저 (로그인 완료)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [googleToken]
+              properties:
+                googleToken:
+                  type: string
+                  description: 구글 OAuth ID 토큰
+      responses:
+        "200":
+          description: 구글 인증 결과 반환 (신규/기존 유저 구분)
           content:
             application/json:
               schema:
                 type: object
-                required: [googleToken]
                 properties:
-                  googleToken:
+                  success:
+                    type: boolean
+                  isNewUser:
+                    type: boolean
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                    nullable: true
+                  error:
                     type: string
-                    description: 구글 OAuth ID 토큰
-        responses:
-          "200":
-            description: 구글 인증 결과 반환 (신규/기존 유저 구분)
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    success:
-                      type: boolean
-                    isNewUser:
-                      type: boolean
+                    nullable: true
+              examples:
+                NewUser:
+                  summary: "신규 유저 (가입 필요)"
+                  value:
+                    success: true
+                    isNewUser: true
                     data:
-                      type: object
-                    meta:
-                      type: object
-                      nullable: true
-                    error:
-                      type: string
-                      nullable: true
-                examples:
-                  NewUser:
-                    summary: "신규 유저 (가입 필요)"
-                    value:
-                      success: true
-                      isNewUser: true
-                      data:
-                        user:
-                          email: "indiagunyoung@gmail.com"
-                          google_uid: "11442213878801107583"
-                          name: "홍길동"
-                      meta: null
-                      error: null
-                  ExistingUser:
-                    summary: "기존 유저 (로그인 완료)"
-                    value:
-                      success: true
-                      isNewUser: false
-                      data:
-                        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                        user:
-                          uuid: "9ea12eb9-7222-4bd9-a3a1-b38a4ac9ff6c"
-                          email: "jimhappy5745@gmail.com"
-                          name: "홍길동"
-                          phone: null
-                          github_url: null
-                          profile_image: null
-                          google_uid: "114412341107583"
-                      meta: null
-                      error: null
+                      user:
+                        email: "indiagunyoung@gmail.com"
+                        google_uid: "11442213878801107583"
+                        name: "홍길동"
+                    meta: null
+                    error: null
+                ExistingUser:
+                  summary: "기존 유저 (로그인 완료)"
+                  value:
+                    success: true
+                    isNewUser: false
+                    data:
+                      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      user:
+                        uuid: "9ea12eb9-7222-4bd9-a3a1-b38a4ac9ff6c"
+                        email: "jimhappy5745@gmail.com"
+                        name: "홍길동"
+                        phone: null
+                        github_url: null
+                        profile_image: null
+                        google_uid: "114412341107583"
+                    meta: null
+                    error: null
 
   /auth/google/signup:
     post:
@@ -851,6 +853,29 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /tasks/{taskId}:
+    get:
+      tags: [Tasks]
+      summary: 테스크 상세 조회
+      security:
+        - BearerAuth: []
+      description: 테스크 내용과 댓글 목록을 함께 조회합니다.
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        "200":
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TaskDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
     patch:
       tags: [Tasks]
       summary: 테스크 수정
@@ -894,30 +919,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /tasks/{taskId}:
-    get:
-      tags: [Tasks]
-      summary: 테스크 상세 조회
-      security:
-        - BearerAuth: []
-      description: 테스크 내용과 댓글 목록을 함께 조회합니다.
-      parameters:
-        - $ref: "#/components/parameters/taskId"
-      responses:
-        "200":
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - type: object
-                    properties:
-                      data:
-                        $ref: "#/components/schemas/TaskDetail"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -1722,6 +1723,109 @@ paths:
                 meta: null
                 error: "해당 문서를 찾을 수 없습니다."
 
+  # ──────────────────────────────────────────
+  # 8. Notifications (알림)
+  # ──────────────────────────────────────────
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: 내 알림 전체 조회
+      description: 로그인한 유저의 모든 알림을 최신순으로 조회합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 알림 목록 반환
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/NotificationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /notifications/unread:
+    get:
+      tags: [Notifications]
+      summary: 읽지 않은 알림 조회
+      description: 읽지 않은 알림 목록과 개수를 반환합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 읽지 않은 알림 반환
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 3
+                          notifications:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/NotificationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /notifications/read-all:
+    patch:
+      tags: [Notifications]
+      summary: 전체 알림 읽음 처리
+      description: 읽지 않은 모든 알림을 읽음 처리합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 전체 읽음 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /notifications/{notificationId}/read:
+    patch:
+      tags: [Notifications]
+      summary: 특정 알림 읽음 처리
+      description: 특정 알림을 읽음 처리합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: 읽음 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 # ──────────────────────────────────────────
 # Components
 # ──────────────────────────────────────────
@@ -2044,7 +2148,7 @@ components:
           type: string
           nullable: true
           example: "가나다"
-        is_edited:              
+        is_edited:
           type: boolean
           example: false
         created_at:
@@ -2104,7 +2208,7 @@ components:
           type: integer
         content:
           type: string
-        is_edited:              
+        is_edited:
           type: boolean
           example: false
         created_at:
@@ -2133,3 +2237,35 @@ components:
           format: date-time
         user:
           $ref: "#/components/schemas/UserSummary"
+
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: string
+          example: "f899a060-be9c-48d8-a5c7-539a589eb95c"
+        team_id:
+          type: integer
+          example: 12
+        task_id:
+          type: integer
+          nullable: true
+          example: 26
+        type:
+          type: string
+          enum:
+            [NEW_TASK, TASK_UPDATED, TASK_DELETED, STATUS_CHANGED, NEW_COMMENT]
+          example: "NEW_TASK"
+        message:
+          type: string
+          example: "🔔 #1 새로운 요청이 있습니다: 좋아요API"
+        is_read:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-04-08T21:51:34.467Z"

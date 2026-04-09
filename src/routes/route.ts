@@ -4,6 +4,7 @@ import usersRouter from "./users";
 import teamsRouter from "./teams";
 import tasksRouter from "./tasks";
 import archivesRouter from "./archives";
+import notificationsRouter from "./notifications";
 
 const router: import("express").Router = express.Router();
 
@@ -12,5 +13,6 @@ router.use("/users", usersRouter);
 router.use("/teams", teamsRouter);
 router.use(tasksRouter);
 router.use(archivesRouter);
+router.use(notificationsRouter);
 
 export default router;
