@@ -1,4 +1,4 @@
-import { withTransaction } from "../utils/transaction";
+import { withTransaction } from "../config/db"
 import {
   insertTeamWithClient,
   insertTeamMemberWithClient,
