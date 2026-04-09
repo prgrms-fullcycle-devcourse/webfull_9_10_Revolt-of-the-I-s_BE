@@ -10,6 +10,7 @@ import {
   existsCommentById,
   deleteCommentById,
   updateTaskStatusByTask,
+  updateTaskById,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
 import { findLogsByTeam, insertLog } from "../repositories/logRepository";
@@ -129,6 +130,40 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.CREATED).json(SUCCESS(task));
 });
 
+// 테스크 수정 (요청자만 가능)
+const updateTask = catchAsync(async (req: Request, res: Response) => {
+  const task = req.taskInfo!;
+  const { title, content, worker_id } = req.body;
+  const requesterId = req.user!.uuid;
+
+  if (task.requester_id !== requesterId) {
+    return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
+  }
+
+  if (title && !isValidTitle(title)) {
+    return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
+  }
+  if (content && !isValidString(content)) {
+    return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
+  }
+
+  const updated = await updateTaskById(task.id, {
+    title: title?.trim(),
+    content: content?.trim(),
+    worker_id: worker_id ?? undefined,
+  });
+
+  await insertLog({
+    teamId: task.team_id,
+    userId: requesterId,
+    taskId: task.id,
+    actionType: "UPDATE",
+    message: `#${task.task_number} 요청 수정`,
+  });
+
+  res.status(StatusCodes.OK).json(SUCCESS(updated));
+});
+
 // 테스크 상세 조회
 const getTaskDetail = catchAsync(async (req: Request, res: Response) => {
   const { taskId } = req.params;
@@ -150,6 +185,15 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
   }
 
   await deleteTaskById(task.id);
+
+  await insertLog({
+    teamId: task.team_id,
+    userId: requesterId,
+    taskId: task.id,
+    actionType: "DELETE",
+    message: `#${task.task_number} 요청 삭제`,
+  });
+
   res
     .status(StatusCodes.OK)
     .json(SUCCESS({ message: "성공적으로 삭제되었습니다." }));
@@ -373,6 +417,7 @@ export {
   getTeamTasksData,
   getTasksByTeam,
   createTask,
+  updateTask,
   getTaskDetail,
   deleteTask,
   acceptTask,

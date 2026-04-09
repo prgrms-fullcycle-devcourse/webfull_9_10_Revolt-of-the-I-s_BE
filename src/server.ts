@@ -7,7 +7,7 @@ import pool from "./config/db";
 
 import { Request, Response, NextFunction } from "express";
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8080;
 
 interface CustomError extends Error {
   status?: number;

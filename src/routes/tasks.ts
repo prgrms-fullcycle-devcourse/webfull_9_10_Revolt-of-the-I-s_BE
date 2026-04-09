@@ -2,6 +2,7 @@ import express from "express";
 import {
   getTasksByTeam,
   createTask,
+  updateTask,
   getTaskDetail,
   deleteTask,
   createComment,
@@ -67,6 +68,12 @@ router.patch(
   authMiddleware,
   teamMemberMiddleware,
   updateComment,
+);
+router.patch(
+  "/tasks/:taskId",
+  authMiddleware,
+  teamMemberMiddleware,
+  updateTask,
 );
 
 // DELETE

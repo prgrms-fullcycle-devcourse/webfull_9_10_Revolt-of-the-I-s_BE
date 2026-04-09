@@ -111,7 +111,7 @@ export const findTasksByTeam = async (teamId: number): Promise<TaskRow[]> => {
     LEFT JOIN comments c ON t.id = c.task_id
     JOIN users ru ON t.requester_id = ru.uuid
     LEFT JOIN users wu ON t.worker_id = wu.uuid
-    WHERE t.team_id = $1
+    WHERE t.team_id = $1 AND t.is_deleted = false
     GROUP BY t.id, t.task_number, t.team_id, t.title, t.content,
              t.status, t.requester_id, ru.name, t.worker_id, wu.name, t.created_at
     ORDER BY t.created_at DESC
@@ -146,7 +146,7 @@ export const findTaskById = async (
     FROM tasks t
     JOIN users ru ON t.requester_id = ru.uuid
     LEFT JOIN users wu ON t.worker_id = wu.uuid
-    WHERE t.id = $1
+    WHERE t.id = $1 AND t.is_deleted = false
   `;
 
   const commentsQuery = `
@@ -194,13 +194,31 @@ export const insertTask = async (
 
   return result.rows[0]!;
 };
+
+// Task 수정
+export const updateTaskById = async (
+  taskId: number,
+  data: { title?: string; content?: string; worker_id?: string | null },
+): Promise<UpdatedTaskStatusRow | null> => {
+  const result = await pool.query(
+    `UPDATE tasks 
+     SET 
+       title = COALESCE($1, title),
+       content = COALESCE($2, content),
+       worker_id = COALESCE($3, worker_id)
+     WHERE id = $4
+     RETURNING id, task_number, team_id, title, status, requester_id, worker_id`,
+    [data.title, data.content, data.worker_id, taskId],
+  );
+  return result.rows[0] ?? null;
+};
+
 // Task 삭제
 export const deleteTaskById = async (taskId: number): Promise<boolean> => {
   const result = await pool.query(
-    `DELETE FROM tasks WHERE id = $1 RETURNING id`,
+    `UPDATE tasks SET is_deleted = true WHERE id = $1 RETURNING id`,
     [taskId],
   );
-
   return result.rows.length > 0;
 };
 

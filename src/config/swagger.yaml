@@ -851,6 +851,53 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /tasks/{taskId}:
+    patch:
+      tags: [Tasks]
+      summary: 테스크 수정
+      description: 요청자(requester)만 수정할 수 있습니다. 전달된 필드만 수정됩니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "수정된 제목"
+                content:
+                  type: string
+                  example: "수정된 내용입니다."
+                worker_id:
+                  type: string
+                  nullable: true
+                  example: "68a34c75-9685-4471-ab2b-a3e247011770"
+      responses:
+        "200":
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TaskStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /tasks/{taskId}:
     get:
       tags: [Tasks]
       summary: 테스크 상세 조회
