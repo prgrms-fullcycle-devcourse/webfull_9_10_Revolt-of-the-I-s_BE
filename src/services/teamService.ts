@@ -12,6 +12,7 @@ import {
   findTeamByTeamId,
   findTeamMember,
   insertTeamMember,
+  findMembersByTeamId,
 } from "../repositories/teamRepository";
 
 // GET /teams - 팀 목록 전체 조회
@@ -52,6 +53,28 @@ export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   }, {});
   res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
 });
+
+// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회
+export const getTeamMembers = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const teamId = req.verifiedTeamId!;
+    const rows = await findMembersByTeamId(teamId);
+
+    const members = rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      position: row.position,
+      status: row.status,
+      email: row.email,
+      phone: row.phone,
+      github_url: row.github_url,
+      profile_image: row.profile_image,
+    }));
+
+    res.status(StatusCodes.OK).json(SUCCESS(members));
+  }
+);
+
 
 // POST /teams - 팀 생성
 export const createTeam = catchAsync(

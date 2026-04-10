@@ -1,7 +1,7 @@
 import { PoolClient } from 'pg';
 import pool from '../config/db';
 
-//팀 목록 전체 조회 (팀 목록 포함)
+//팀 목록 전체 조회 (팀 목록 포함) (❗️아직 수정 전입니다. 보안상의 이유로 이미지만 가져오는 걸로 수정예정)
 export const findAllWithMembers = async (currentUserId: string) => {
     const sql = `
         SELECT 
@@ -19,6 +19,27 @@ export const findAllWithMembers = async (currentUserId: string) => {
         LEFT JOIN users u ON tm.user_id = u.uuid;
     `;
     const result = await pool.query(sql, [currentUserId]);
+    return result.rows;
+}
+
+// 특정 팀 멤버 목록 조회
+export const findMembersByTeamId = async (teamId: number) => {
+    const sql = `
+        SELECT 
+            tm.id,
+            u.name,
+            tm.position,
+            tm.status,
+            u.email,
+            u.phone,
+            u.github_url,
+            u.profile_image
+        FROM team_member tm
+        JOIN users u ON tm.user_id = u.uuid
+        WHERE tm.team_id = $1
+        ORDER BY tm.id;
+    `;
+    const result = await pool.query(sql, [teamId]);
     return result.rows;
 }
 
