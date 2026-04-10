@@ -26,7 +26,7 @@ router.get('/:teamId/members/active', teamMemberMiddleware, getActiveMembers);
 router.post('/', createTeam);
 
 // 팀 가입/입장
-router.post('/:teamId/members', joinTeam);
+router.post('/:teamId/members/join', joinTeam);
 
 // PATCH
 // 팀내 포지션 수정 

@@ -571,7 +571,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /teams/{teamId}/members:
+  /teams/{teamId}/members/join:
     post:
       tags: [Teams]
       summary: 팀 가입 / 입장
