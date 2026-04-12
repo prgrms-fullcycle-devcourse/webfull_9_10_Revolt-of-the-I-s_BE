@@ -29,6 +29,7 @@ export interface CommentRow {
   content: string;
   created_at: Date;
   user: TaskUserInfo;
+  is_edited: boolean;
 }
 
 export interface TaskDetailRow {
@@ -156,7 +157,7 @@ export const findTaskById = async (
 
   const commentsQuery = `
     SELECT
-      c.id, c.task_id, c.content, c.created_at,
+      c.id, c.task_id, c.content, c.created_at, c.is_edited,
       json_build_object(
         'uuid', u.uuid,
         'name', u.name,
