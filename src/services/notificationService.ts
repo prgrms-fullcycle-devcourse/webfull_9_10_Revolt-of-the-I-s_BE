@@ -9,6 +9,7 @@ import {
   markAllNotificationsAsRead,
   countUnreadNotifications,
 } from "../repositories/notificationRepository";
+import pusher from "../config/pusher";
 
 // 내 알림 전체 조회
 export const getNotifications = catchAsync(
