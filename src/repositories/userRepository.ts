@@ -7,6 +7,9 @@ export interface UserEntity {
     password?: string;
     name: string;
     googleUid ?: string | null;
+    profile_image ?: string | null;
+    phone ?: string | null;
+    github_url ?: string | null;
 }
 
 export const signup = async (userData: any): Promise<string> => {
@@ -23,7 +26,7 @@ export const signup = async (userData: any): Promise<string> => {
         userData.name,
         userData.phone,
         userData.github_url || null,
-        userData.profile_image || null,
+        userData.profile_image_url || null,
         userData.google_uid || null
     ];
     const { rows } = await pool.query(sql, params);
@@ -58,11 +61,16 @@ export const signupByGoogle = async (userData: any): Promise<number> => {
         userData.name,
         userData.phone,
         userData.github_url || null,
-        userData.profile_image || null,
+        userData.profile_image_url || null,
         userData.google_uid || null
     ];
 
     await pool.query(sql, params); 
 
     return userData.uuid;
+};
+
+export const updateProfileImage = async (userId: string, imageUrl: string) => {
+    const sql = `UPDATE users SET profile_image = ? WHERE uuid = ?`;
+    await pool.query(sql, [imageUrl, userId]);
 };

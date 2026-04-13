@@ -3,7 +3,8 @@ import catchAsync, { AppError } from "../utils/response";
 import * as userService from "../services/userService";
 import { z } from 'zod';
 import { validate } from "../utils/validators";
-import { is } from "zod/v4/locales";
+import { upload } from "../utils/s3";
+import { authMiddleware } from "../utils/auth";
 
 const router: Router = Router();
 
@@ -17,12 +18,15 @@ const signupSchema = z.object({
 });
 
 // --- [회원가입] ---
-router.post("/signup", 
+router.post("/signup",
+  upload.single('profileImage'),
   validate(signupSchema),
   catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
     const userData = req.body;
+    const file = req.file
 
-    const result = await userService.signup(userData);
+    const result = await userService.signup(userData, file);
+
 
     if (typeof result === "string") {
       return res.status(201).json({
@@ -123,8 +127,9 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
 // --- [구글 회원가입] ---
 router.post("/google/signup", catchAsync(async (req: Request, res: Response) => {
     const userData = req.body;
+    const file = req.file;
 
-    const result = await userService.googleSignup(userData);
+    const result = await userService.googleSignup(userData, file);
 
     res.cookie("accessToken", result.token, {
         httpOnly: true,
@@ -140,3 +145,4 @@ router.post("/google/signup", catchAsync(async (req: Request, res: Response) => 
 }));
 
 export default router;
+
