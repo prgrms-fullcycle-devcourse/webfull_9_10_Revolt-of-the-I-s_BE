@@ -4,6 +4,7 @@ import * as userService from "../services/userService";
 import { Router, Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../utils/auth";
 import { UserStatus } from "../utils/validators"
+import { upload } from "../utils/s3";
 
 const router: import("express").Router = express.Router();
 
@@ -46,5 +47,20 @@ router.patch("/me/status", authMiddleware, catchAsync(async(req: any, res: Respo
         error: null,
     });
 }));
+
+// 프로필 이미지 수정
+router.patch("/profile/image",
+    authMiddleware,
+    upload.single('profileImage'), 
+    catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  
+        const user = req.user; 
+        const file = req.file;
+
+        const result = await userService.updateProfileImage(user!.uuid, file);
+
+        return res.status(200).json(result);
+    })
+);
 
 export default router;

@@ -5,6 +5,7 @@ import { AppError } from "../utils/response";
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
 import pusher from '../config/pusher';
+import { deleteFileFromS3 } from '../utils/s3';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET
@@ -15,7 +16,7 @@ export interface ServiceError {
 }
 
 // --- [회원가입 로직] ---
-export const signup = async (userData: any): Promise<string> => {
+export const signup = async (userData: any, file?: Express.Multer.File): Promise<string> => {
     const existingUser = await userRepo.findUserByEmail(userData.email);
     if (existingUser) {
         throw new AppError(409, "이미 사용 중인 이메일입니다.");
@@ -23,11 +24,14 @@ export const signup = async (userData: any): Promise<string> => {
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     const userUuid = uuidv4();
-
+    const s3File = file as Express.MulterS3.File;
+    const profile_image_url = s3File ? s3File.location : null;
+    
     await userRepo.signup({
         ...userData,
         password: hashedPassword,
-        uuid: userUuid
+        uuid: userUuid,
+        profile_image_url: profile_image_url,
     });
 
     return userUuid;
@@ -63,7 +67,7 @@ type GoogleLoginResponse =
 export const googleLogin = async (idToken: string): Promise<GoogleLoginResponse> => {
     const ticket = await client.verifyIdToken({
     idToken,
-    // audience: process.env.GOOGLE_CLIENT_ID!
+    audience: process.env.GOOGLE_CLIENT_ID!
     });
     const payload = ticket.getPayload();
     
@@ -107,18 +111,21 @@ interface googleUserData {
 }
 
 // --- [구글 회원가입] ---
-export const googleSignup = async (userData: googleUserData) => {
+export const googleSignup = async (userData: any, file?: Express.Multer.File) => {
     const existingUser = await userRepo.findUserByEmail(userData.email);
     if (existingUser) {
         throw new AppError(409, "이미 가입된 이메일입니다.");
     }
 
+    const s3File = file as Express.MulterS3.File;
+    const profile_image_url = s3File ? s3File.location : null;
     const newUserUuid = uuidv4();
 
     await userRepo.signupByGoogle({
         ...userData,
         uuid: newUserUuid,
         password: `GOOGLE_${newUserUuid}`,
+        profile_image_url: profile_image_url,
     });
 
     const token = jwt.sign(
@@ -144,4 +151,39 @@ export const status = async (uuid: string, teamId: number, status: string): Prom
     });
 
     return { user }
+};
+
+// 프로필 이미지 수정
+export const updateProfileImage = async (userId: string, file?: Express.Multer.File) => {
+    if (!file) {
+        throw new AppError(400, "업로드할 이미지 파일이 없습니다.");
+    }
+  
+    const user = await userRepo.findUserByEmail(userId);
+    if (!user) {
+        throw new AppError(404, "존재하지 않는 유저입니다.");
+    }
+
+    const s3File = file as Express.MulterS3.File;
+    const newProfileImageUrl = s3File.location;
+    const oldProfileImageUrl = user.profile_image; 
+
+    try {
+        await userRepo.updateProfileImage(userId, newProfileImageUrl);
+
+        if (oldProfileImageUrl) {
+            await deleteFileFromS3(oldProfileImageUrl); 
+        }
+
+        return {
+            success: true,
+            message: "프로필 이미지가 성공적으로 수정되었습니다.",
+            imageUrl: newProfileImageUrl 
+        };
+
+    } catch (error) {
+        await deleteFileFromS3(newProfileImageUrl);
+        console.error("프로필 이미지 수정 중 오류:", error);
+        throw new AppError(500, "프로필 이미지 수정 중 서버 오류가 발생했습니다.");
+    }
 };
