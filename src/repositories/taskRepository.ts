@@ -1,4 +1,5 @@
 import pool from "../config/db";
+import { PoolClient } from "pg";
 
 export interface TaskRow {
   id: number;
@@ -182,7 +183,9 @@ export const findTaskById = async (
   };
 };
 
-// Task 생성
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 task 생성할 때 사용
+// =============================================
 export const insertTask = async (
   input: CreateTaskInput,
 ): Promise<CreatedTaskRow> => {
@@ -201,18 +204,44 @@ export const insertTask = async (
   return result.rows[0]!;
 };
 
-// Task 수정
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// task 생성 + 로그 생성 + 알림 생성을 하나로 묶어서 처리
+// 중간에 실패하면 전체 ROLLBACK됨
+// =============================================
+export const insertTaskWithClient = async (
+  client: PoolClient,
+  input: CreateTaskInput,
+): Promise<CreatedTaskRow> => {
+  const { teamId, title, content, requesterId, workerId } = input;
+
+  const result = await client.query<CreatedTaskRow>(
+    `INSERT INTO tasks (task_number, team_id, title, content, requester_id, worker_id)
+     VALUES (
+       (SELECT COALESCE(MAX(task_number), 0) + 1 FROM tasks WHERE team_id = $1),
+       $1, $2, $3, $4, $5
+     )
+     RETURNING id, task_number, team_id, title, content, status, requester_id, worker_id, created_at`,
+    [teamId, title, content, requesterId, workerId],
+  );
+
+  return result.rows[0]!;
+};
+
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 task 수정할 때 사용
+// =============================================
 export const updateTaskById = async (
   taskId: number,
   data: { title?: string; content?: string; worker_id?: string | null },
 ): Promise<UpdatedTaskStatusRow | null> => {
   const result = await pool.query(
-    `UPDATE tasks 
-     SET 
+    `UPDATE tasks
+     SET
        title = COALESCE($1, title),
        content = COALESCE($2, content),
        worker_id = COALESCE($3, worker_id),
-       is_edited = true             
+       is_edited = true
      WHERE id = $4
      RETURNING id, task_number, team_id, title, status, requester_id, worker_id, is_edited`,
     [data.title, data.content, data.worker_id, taskId],
@@ -220,7 +249,33 @@ export const updateTaskById = async (
   return result.rows[0] ?? null;
 };
 
-// Task 삭제
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// task 수정 + 로그 생성 + 알림 생성을 하나로 묶어서 처리
+// 중간에 실패하면 전체 ROLLBACK됨
+// =============================================
+export const updateTaskWithClient = async (
+  client: PoolClient,
+  taskId: number,
+  data: { title?: string; content?: string; worker_id?: string | null },
+): Promise<UpdatedTaskStatusRow | null> => {
+  const result = await client.query(
+    `UPDATE tasks
+     SET
+       title = COALESCE($1, title),
+       content = COALESCE($2, content),
+       worker_id = COALESCE($3, worker_id),
+       is_edited = true
+     WHERE id = $4
+     RETURNING id, task_number, team_id, title, status, requester_id, worker_id, is_edited`,
+    [data.title, data.content, data.worker_id, taskId],
+  );
+  return result.rows[0] ?? null;
+};
+
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 task 삭제할 때 사용
+// =============================================
 export const deleteTaskById = async (taskId: number): Promise<boolean> => {
   const result = await pool.query(
     `UPDATE tasks SET is_deleted = true WHERE id = $1 RETURNING id`,
@@ -229,7 +284,25 @@ export const deleteTaskById = async (taskId: number): Promise<boolean> => {
   return result.rows.length > 0;
 };
 
-// 댓글 작성
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// task 삭제 + 로그 생성 + 알림 생성을 하나로 묶어서 처리
+// 중간에 실패하면 전체 ROLLBACK됨
+// =============================================
+export const deleteTaskWithClient = async (
+  client: PoolClient,
+  taskId: number,
+): Promise<boolean> => {
+  const result = await client.query(
+    `UPDATE tasks SET is_deleted = true WHERE id = $1 RETURNING id`,
+    [taskId],
+  );
+  return result.rows.length > 0;
+};
+
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 댓글 저장할 때 사용
+// =============================================
 export const insertComment = async (
   taskId: number,
   userId: string,
@@ -245,6 +318,44 @@ export const insertComment = async (
   const comment = result.rows[0];
 
   const commentWithUser = await pool.query(
+    `SELECT
+      c.id, c.task_id, c.content, c.created_at,
+      json_build_object(
+        'uuid', u.uuid,
+        'name', u.name,
+        'profile_image', u.profile_image
+      ) AS user
+     FROM comments c
+     JOIN users u ON c.user_id = u.uuid
+     WHERE c.id = $1`,
+    [comment.id],
+  );
+
+  return commentWithUser.rows[0];
+};
+
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// 댓글 저장 + 알림 생성을 하나로 묶어서 처리
+// 댓글은 저장됐는데 알림 저장 실패하는 불일치 방지
+// =============================================
+export const insertCommentWithClient = async (
+  client: PoolClient,
+  taskId: number,
+  userId: string,
+  content: string,
+): Promise<CreatedCommentRow> => {
+  const result = await client.query(
+    `INSERT INTO comments (task_id, user_id, content)
+     VALUES ($1, $2, $3)
+     RETURNING id, task_id, content, created_at, user_id`,
+    [taskId, userId, content],
+  );
+
+  const comment = result.rows[0];
+
+  // 댓글 작성자 정보도 같은 트랜잭션 client로 조회
+  const commentWithUser = await client.query(
     `SELECT
       c.id, c.task_id, c.content, c.created_at,
       json_build_object(
@@ -304,14 +415,37 @@ export const deleteCommentById = async (
   return result.rows.length > 0;
 };
 
-// task 상태 업데이트
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 task 상태 변경할 때 사용
+// =============================================
 export const updateTaskStatusByTask = async (
   taskId: number,
   currentStatus: "Todo" | "Doing" | "Done" | "Checked",
   nextStatus: "Todo" | "Doing" | "Done" | "Checked",
 ): Promise<UpdatedTaskStatusRow | null> => {
   const result = await pool.query(
-    `UPDATE tasks SET status = $1 
+    `UPDATE tasks SET status = $1
+     WHERE id = $2 AND status = $3
+     RETURNING id, task_number, team_id, title, status, requester_id, worker_id, is_edited`,
+    [nextStatus, taskId, currentStatus],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// 상태 변경 + 로그 생성을 하나로 묶어서 처리
+// 중간에 실패하면 전체 ROLLBACK됨
+// =============================================
+export const updateTaskStatusWithClient = async (
+  client: PoolClient,
+  taskId: number,
+  currentStatus: "Todo" | "Doing" | "Done" | "Checked",
+  nextStatus: "Todo" | "Doing" | "Done" | "Checked",
+): Promise<UpdatedTaskStatusRow | null> => {
+  const result = await client.query(
+    `UPDATE tasks SET status = $1
      WHERE id = $2 AND status = $3
      RETURNING id, task_number, team_id, title, status, requester_id, worker_id, is_edited`,
     [nextStatus, taskId, currentStatus],

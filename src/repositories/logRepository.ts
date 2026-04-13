@@ -1,4 +1,5 @@
 import pool from "../config/db";
+import { PoolClient } from "pg";
 import { TaskUserInfo } from "./taskRepository";
 
 export interface InsertLogInput {
@@ -20,10 +21,31 @@ export interface LogRow {
   user: TaskUserInfo;
 }
 
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 로그 저장할 때 사용
+// =============================================
 export const insertLog = async (input: InsertLogInput): Promise<void> => {
   const { teamId, userId, taskId, actionType, message } = input;
 
   await pool.query(
+    `INSERT INTO logs (team_id, user_id, task_id, action_type, message)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [teamId, userId, taskId, actionType, message],
+  );
+};
+
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// task 생성/수정/삭제/상태변경과 함께 묶어서 처리할 때 사용
+// 중간에 실패하면 전체 ROLLBACK됨
+// =============================================
+export const insertLogWithClient = async (
+  client: PoolClient,
+  input: InsertLogInput,
+): Promise<void> => {
+  const { teamId, userId, taskId, actionType, message } = input;
+
+  await client.query(
     `INSERT INTO logs (team_id, user_id, task_id, action_type, message)
      VALUES ($1, $2, $3, $4, $5)`,
     [teamId, userId, taskId, actionType, message],

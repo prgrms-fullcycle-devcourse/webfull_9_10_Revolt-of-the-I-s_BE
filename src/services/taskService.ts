@@ -4,23 +4,29 @@ import {
   findTasksByTeam,
   findTaskById,
   insertTask,
+  insertTaskWithClient,
   deleteTaskById,
+  deleteTaskWithClient,
   insertComment,
+  insertCommentWithClient,
   updateCommentById,
   existsCommentById,
   deleteCommentById,
   updateTaskStatusByTask,
+  updateTaskStatusWithClient,
   updateTaskById,
+  updateTaskWithClient,
 } from "../repositories/taskRepository";
 import pusher from "../config/pusher";
-import { findLogsByTeam, insertLog } from "../repositories/logRepository";
+import { findLogsByTeam, insertLog, insertLogWithClient } from "../repositories/logRepository";
 import catchAsync, {
   ERROR,
   INVALID_STATUS_ERROR,
   SUCCESS,
 } from "../utils/response";
 import { isValidId, isValidString, isValidTitle } from "../utils/validators";
-import { insertNotification } from "../repositories/notificationRepository";
+import { insertNotification, insertNotificationWithClient } from "../repositories/notificationRepository";
+import { withTransaction } from "../config/db";
 
 interface TaskQuantity {
   Todo: number;
@@ -44,7 +50,11 @@ const getTeamTasksData = async (teamId: number) => {
   return { taskQuantity, tasks };
 };
 
-// 상태 변경 처리
+// =============================================
+// 상태 변경 처리 - withTransaction으로 묶음
+// 상태 변경 + 로그 생성이 하나의 트랜잭션으로 처리됨
+// 상태 변경은 성공했는데 로그 저장 실패하는 불일치 방지
+// =============================================
 const statusChange = async (
   taskId: number,
   userId: string,
@@ -54,23 +64,28 @@ const statusChange = async (
   teamId: number,
   taskNumber: number,
 ) => {
-  const updated = await updateTaskStatusByTask(
-    taskId,
-    currentStatus,
-    nextStatus,
-  );
+  // 트랜잭션으로 상태변경 + 로그 생성을 묶음
+  const updated = await withTransaction(async (client) => {
+    // 1. task 상태 변경
+    const result = await updateTaskStatusWithClient(client, taskId, currentStatus, nextStatus);
 
-  if (!updated) {
-    return null;
-  }
+    if (!result) return null;
 
-  await insertLog({
-    teamId,
-    userId,
-    taskId,
-    actionType: "MOVE",
-    message: logMessage,
+    // 2. 로그 생성 (상태 변경과 반드시 함께 저장되어야 함)
+    await insertLogWithClient(client, {
+      teamId,
+      userId,
+      taskId,
+      actionType: "MOVE",
+      message: logMessage,
+    });
+
+    return result;
   });
+
+  if (!updated) return null;
+
+  // pusher는 DB 작업이 아니므로 트랜잭션 밖에서 실행
   await pusher.trigger(`team-${teamId}`, "task-status-updated", {
     taskId,
     taskNumber,
@@ -92,7 +107,11 @@ const getTasksByTeam = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(SUCCESS(data));
 });
 
-// 테스크 생성
+// =============================================
+// 테스크 생성 - withTransaction으로 묶음
+// task 생성 + 로그 생성 + 알림 생성이 하나의 트랜잭션으로 처리됨
+// task는 만들어졌는데 로그/알림 저장 실패하는 불일치 방지
+// =============================================
 const createTask = catchAsync(async (req: Request, res: Response) => {
   const { teamId } = req.params;
   const { title, content, worker_id } = req.body;
@@ -103,37 +122,47 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
 
   const requesterId = req.user!.uuid;
 
-  const task = await insertTask({
-    teamId: Number(teamId),
-    title: title.trim(),
-    content: content.trim(),
-    requesterId,
-    workerId: worker_id ? String(worker_id) : null,
+  // 트랜잭션으로 task 생성 + 로그 생성 + 알림 생성을 묶음
+  const task = await withTransaction(async (client) => {
+    // 1. task 생성
+    const newTask = await insertTaskWithClient(client, {
+      teamId: Number(teamId),
+      title: title.trim(),
+      content: content.trim(),
+      requesterId,
+      workerId: worker_id ? String(worker_id) : null,
+    });
+
+    // 2. 로그 생성 (task 생성과 반드시 함께 저장되어야 함)
+    await insertLogWithClient(client, {
+      teamId: newTask.team_id,
+      userId: requesterId,
+      taskId: newTask.id,
+      actionType: "CREATE",
+      message: `#${newTask.task_number} 요청 발행(Todo)`,
+    });
+
+    // 3. 담당자가 있을 경우 알림 생성 (task, 로그와 반드시 함께 저장되어야 함)
+    if (newTask.worker_id) {
+      await insertNotificationWithClient(client, {
+        userId: newTask.worker_id,
+        teamId: newTask.team_id,
+        taskId: newTask.id,
+        type: "NEW_TASK",
+        message: `🔔 #${newTask.task_number} 새로운 요청이 있습니다: ${newTask.title}`,
+      });
+    }
+
+    return newTask;
   });
 
-  await insertLog({
-    teamId: task.team_id,
-    userId: requesterId,
-    taskId: task.id,
-    actionType: "CREATE",
-    message: `#${task.task_number} 요청 발행(Todo)`,
-  });
-
+  // pusher는 DB 작업이 아니므로 트랜잭션 밖에서 실행
   if (task.worker_id) {
     await pusher.trigger(`user-${task.worker_id}`, "new-task-requested", {
       message: `🔔 새로운 요청이 있습니다: ${task.title}`,
       taskId: task.id,
       taskNumber: task.task_number,
       teamId: task.team_id,
-    });
-
-    // 알림 저장
-    await insertNotification({
-      userId: task.worker_id,
-      teamId: task.team_id,
-      taskId: task.id,
-      type: "NEW_TASK",
-      message: `🔔 #${task.task_number} 새로운 요청이 있습니다: ${task.title}`,
     });
 
     await pusher.trigger(`user-${task.worker_id}`, "new-notification", {
@@ -147,7 +176,11 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.CREATED).json(SUCCESS(task));
 });
 
-// 테스크 수정 (요청자만 가능)
+// =============================================
+// 테스크 수정 (요청자만 가능) - withTransaction으로 묶음
+// task 수정 + 로그 생성 + 알림 생성이 하나의 트랜잭션으로 처리됨
+// task는 수정됐는데 로그/알림 저장 실패하는 불일치 방지
+// =============================================
 const updateTask = catchAsync(async (req: Request, res: Response) => {
   const task = req.taskInfo!;
   const { title, content, worker_id } = req.body;
@@ -164,29 +197,40 @@ const updateTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.BAD_REQUEST).json(ERROR.INVALID_ID);
   }
 
-  const updated = await updateTaskById(task.id, {
-    title: title?.trim(),
-    content: content?.trim(),
-    worker_id: worker_id ?? undefined,
-  });
-
-  await insertLog({
-    teamId: task.team_id,
-    userId: requesterId,
-    taskId: task.id,
-    actionType: "UPDATE",
-    message: `#${task.task_number} 요청 수정`,
-  });
-
-  if (task.worker_id) {
-    await insertNotification({
-      userId: task.worker_id,
-      teamId: task.team_id,
-      taskId: task.id,
-      type: "TASK_UPDATED",
-      message: `🚨 #${task.task_number} 요청이 수정되었습니다.`,
+  // 트랜잭션으로 task 수정 + 로그 생성 + 알림 생성을 묶음
+  const updated = await withTransaction(async (client) => {
+    // 1. task 수정
+    const result = await updateTaskWithClient(client, task.id, {
+      title: title?.trim(),
+      content: content?.trim(),
+      worker_id: worker_id ?? undefined,
     });
 
+    // 2. 로그 생성 (task 수정과 반드시 함께 저장되어야 함)
+    await insertLogWithClient(client, {
+      teamId: task.team_id,
+      userId: requesterId,
+      taskId: task.id,
+      actionType: "UPDATE",
+      message: `#${task.task_number} 요청 수정`,
+    });
+
+    // 3. 담당자가 있을 경우 알림 생성 (task, 로그와 반드시 함께 저장되어야 함)
+    if (task.worker_id) {
+      await insertNotificationWithClient(client, {
+        userId: task.worker_id,
+        teamId: task.team_id,
+        taskId: task.id,
+        type: "TASK_UPDATED",
+        message: `🚨 #${task.task_number} 요청이 수정되었습니다.`,
+      });
+    }
+
+    return result;
+  });
+
+  // pusher는 DB 작업이 아니므로 트랜잭션 밖에서 실행
+  if (task.worker_id) {
     await pusher.trigger(`user-${task.worker_id}`, "new-notification", {
       type: "TASK_UPDATED",
       message: `🚨 #${task.task_number} 요청이 수정되었습니다.`,
@@ -209,7 +253,11 @@ const getTaskDetail = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(SUCCESS(task));
 });
 
-// 테스크 삭제
+// =============================================
+// 테스크 삭제 - withTransaction으로 묶음
+// task 삭제 + 로그 생성 + 알림 생성이 하나의 트랜잭션으로 처리됨
+// task는 삭제됐는데 로그/알림 저장 실패하는 불일치 방지
+// =============================================
 const deleteTask = catchAsync(async (req: Request, res: Response) => {
   const task = req.taskInfo!;
   const requesterId = req.user!.uuid;
@@ -218,24 +266,31 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
     return res.status(StatusCodes.FORBIDDEN).json(ERROR.FORBIDDEN);
   }
 
-  await deleteTaskById(task.id);
+  // 트랜잭션으로 task 삭제 + 로그 생성 + 알림 생성을 묶음
+  await withTransaction(async (client) => {
+    // 1. task 삭제 (soft delete - is_deleted = true)
+    await deleteTaskWithClient(client, task.id);
 
-  await insertLog({
-    teamId: task.team_id,
-    userId: requesterId,
-    taskId: task.id,
-    actionType: "DELETE",
-    message: `#${task.task_number} 요청 삭제`,
+    // 2. 로그 생성 (task 삭제와 반드시 함께 저장되어야 함)
+    await insertLogWithClient(client, {
+      teamId: task.team_id,
+      userId: requesterId,
+      taskId: task.id,
+      actionType: "DELETE",
+      message: `#${task.task_number} 요청 삭제`,
+    });
+
+    // 3. 요청자에게 알림 생성 (task, 로그와 반드시 함께 저장되어야 함)
+    await insertNotificationWithClient(client, {
+      userId: task.requester_id,
+      teamId: task.team_id,
+      taskId: task.id,
+      type: "TASK_DELETED",
+      message: `❌ #${task.task_number} 요청이 삭제되었습니다.`,
+    });
   });
 
-  await insertNotification({
-    userId: task.requester_id,
-    teamId: task.team_id,
-    taskId: task.id,
-    type: "TASK_DELETED",
-    message: `❌ #${task.task_number} 요청이 삭제되었습니다.`,
-  });
-
+  // pusher는 DB 작업이 아니므로 트랜잭션 밖에서 실행
   await pusher.trigger(`user-${task.requester_id}`, "new-notification", {
     type: "TASK_DELETED",
     message: `❌ #${task.task_number} 요청이 삭제되었습니다.`,
@@ -437,7 +492,11 @@ const rejectTask = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
 
-// 뎃글 작성
+// =============================================
+// 댓글 작성 - withTransaction으로 묶음
+// 댓글 저장 + 알림 생성이 하나의 트랜잭션으로 처리됨
+// 댓글은 저장됐는데 알림 저장 실패하는 불일치 방지
+// =============================================
 const createComment = catchAsync(async (req: Request, res: Response) => {
   const { taskId } = req.params;
   const { content } = req.body;
@@ -447,24 +506,36 @@ const createComment = catchAsync(async (req: Request, res: Response) => {
   }
 
   const userId = req.user!.uuid;
-
-  const comment = await insertComment(Number(taskId), userId, content.trim());
-  await pusher.trigger(`task-${taskId}`, "new-comment", comment);
-
   const taskInfo = req.taskInfo!;
+
+  // 본인 제외한 알림 수신 대상 (요청자 + 담당자)
   const recipients = [taskInfo.requester_id, taskInfo.worker_id].filter(
-    (id) => id && id !== userId, // 본인 제외
+    (id) => id && id !== userId,
   );
 
-  for (const recipientId of recipients) {
-    await insertNotification({
-      userId: recipientId!,
-      teamId: taskInfo.team_id,
-      taskId: taskInfo.id,
-      type: "NEW_COMMENT",
-      message: `💬 #${taskInfo.task_number} 요청에 새로운 댓글이 달렸습니다.`,
-    });
+  // 트랜잭션으로 댓글 저장 + 알림 생성을 묶음
+  const comment = await withTransaction(async (client) => {
+    // 1. 댓글 저장
+    const newComment = await insertCommentWithClient(client, Number(taskId), userId, content.trim());
 
+    // 2. 알림 생성 (요청자, 담당자 각각 - 본인 제외)
+    for (const recipientId of recipients) {
+      await insertNotificationWithClient(client, {
+        userId: recipientId!,
+        teamId: taskInfo.team_id,
+        taskId: taskInfo.id,
+        type: "NEW_COMMENT",
+        message: `💬 #${taskInfo.task_number} 요청에 새로운 댓글이 달렸습니다.`,
+      });
+    }
+
+    return newComment;
+  });
+
+  // pusher는 DB 작업이 아니므로 트랜잭션 밖에서 실행
+  await pusher.trigger(`task-${taskId}`, "new-comment", comment);
+
+  for (const recipientId of recipients) {
     await pusher.trigger(`user-${recipientId}`, "new-notification", {
       type: "NEW_COMMENT",
       message: `💬 #${taskInfo.task_number} 요청에 새로운 댓글이 달렸습니다.`,
