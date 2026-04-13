@@ -125,7 +125,9 @@ router.post("/google", catchAsync(async (req: Request, res: Response) => {
 );
 
 // --- [구글 회원가입] ---
-router.post("/google/signup", catchAsync(async (req: Request, res: Response) => {
+router.post("/google/signup", 
+  upload.single('profileImage'),
+  catchAsync(async (req: Request, res: Response) => {
     const userData = req.body;
     const file = req.file;
 
