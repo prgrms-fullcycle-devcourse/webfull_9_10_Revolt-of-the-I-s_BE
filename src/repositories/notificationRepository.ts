@@ -1,4 +1,5 @@
 import pool from "../config/db";
+import { PoolClient } from "pg";
 
 export type NotificationType =
   | "NEW_TASK"
@@ -26,12 +27,31 @@ export interface InsertNotificationInput {
   message: string;
 }
 
-// 알림 저장
+// =============================================
+// 기본 버전 - 트랜잭션 없이 단독으로 알림 저장할 때 사용
+// =============================================
 export const insertNotification = async (
   input: InsertNotificationInput,
 ): Promise<void> => {
   const { userId, teamId, taskId, type, message } = input;
   await pool.query(
+    `INSERT INTO notifications (user_id, team_id, task_id, type, message)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [userId, teamId, taskId, type, message],
+  );
+};
+
+// =============================================
+// 트랜잭션 버전 - withTransaction 안에서 사용
+// task 생성/수정/삭제/상태변경과 함께 묶어서 처리할 때 사용
+// 중간에 실패하면 전체 ROLLBACK됨
+// =============================================
+export const insertNotificationWithClient = async (
+  client: PoolClient,
+  input: InsertNotificationInput,
+): Promise<void> => {
+  const { userId, teamId, taskId, type, message } = input;
+  await client.query(
     `INSERT INTO notifications (user_id, team_id, task_id, type, message)
      VALUES ($1, $2, $3, $4, $5)`,
     [userId, teamId, taskId, type, message],
