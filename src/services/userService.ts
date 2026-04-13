@@ -154,12 +154,12 @@ export const status = async (uuid: string, teamId: number, status: string): Prom
 };
 
 // 프로필 이미지 수정
-export const updateProfileImage = async (userId: string, file?: Express.Multer.File) => {
+export const updateProfileImage = async (email: string, file?: Express.Multer.File) => {
     if (!file) {
         throw new AppError(400, "업로드할 이미지 파일이 없습니다.");
     }
   
-    const user = await userRepo.findUserByEmail(userId);
+    const user = await userRepo.findUserByEmail(email);
     if (!user) {
         throw new AppError(404, "존재하지 않는 유저입니다.");
     }
@@ -169,7 +169,7 @@ export const updateProfileImage = async (userId: string, file?: Express.Multer.F
     const oldProfileImageUrl = user.profile_image; 
 
     try {
-        await userRepo.updateProfileImage(userId, newProfileImageUrl);
+        await userRepo.updateProfileImage(user.uuid, newProfileImageUrl);
 
         if (oldProfileImageUrl) {
             await deleteFileFromS3(oldProfileImageUrl); 
