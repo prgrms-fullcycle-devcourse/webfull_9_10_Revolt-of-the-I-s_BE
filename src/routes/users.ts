@@ -57,7 +57,7 @@ router.patch("/profile/image",
         const user = req.user; 
         const file = req.file;
 
-        const result = await userService.updateProfileImage(user!.uuid, file);
+        const result = await userService.updateProfileImage(user!.email, file);
 
         return res.status(200).json(result);
     })

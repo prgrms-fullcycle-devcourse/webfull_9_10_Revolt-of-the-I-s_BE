@@ -71,6 +71,6 @@ export const signupByGoogle = async (userData: any): Promise<number> => {
 };
 
 export const updateProfileImage = async (userId: string, imageUrl: string) => {
-    const sql = `UPDATE users SET profile_image = ? WHERE uuid = ?`;
+    const sql = `UPDATE users SET profile_image = $1 WHERE uuid = $2`;
     await pool.query(sql, [imageUrl, userId]);
 };
