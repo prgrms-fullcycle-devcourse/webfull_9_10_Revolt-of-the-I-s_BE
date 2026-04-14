@@ -13,9 +13,10 @@ import {
   findTeamMember,
   insertTeamMember,
   findMembersByTeamId,
+  findAllWithProfile,
 } from "../repositories/teamRepository";
 
-// GET /teams - 팀 목록 전체 조회
+
 // GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (임시)
 export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.uuid;
@@ -54,6 +55,26 @@ export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   }, {});
   res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
 });
+
+// GET /teams - 팀 목록 전체 조회로비용 팀 목록 조회
+export const getAllTeamsWithProfile = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user!.uuid;
+    const rows = await findAllWithProfile(userId);
+
+    const teamsMap = rows.reduce((acc: any, row: any) => {
+      if (!acc[row.team_id]) {
+        acc[row.team_id] = {
+          id: row.team_id,
+          name: row.team_name,
+          isMember: row.is_member === 1,
+          memberCount: parseInt(row.member_count, 10),
+          previewImages: (row.preview_images || [])
+        };    
+      }
+      return acc;
+    }, {});
+    res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
+})
 
 // GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (프론트 연결 전)
 export const getTeamMembers = catchAsync(
