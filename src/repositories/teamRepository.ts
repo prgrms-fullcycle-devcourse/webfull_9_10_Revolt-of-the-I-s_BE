@@ -1,7 +1,7 @@
 import { PoolClient } from 'pg';
 import pool from '../config/db';
 
-//팀 목록 전체 조회 (팀 목록 포함) 
+//팀 목록 전체 조회 (팀 멤버 목록 포함) 
 export const findAllWithMembers = async (currentUserId: string) => {
     const sql = `
         SELECT 
@@ -14,6 +14,27 @@ export const findAllWithMembers = async (currentUserId: string) => {
             tm.position, 
             tm.status,
             u.uuid AS user_uuid, u.email, u.name AS user_name, u.phone, u.github_url, u.profile_image
+        FROM teams t
+        LEFT JOIN team_member tm ON t.id = tm.team_id
+        LEFT JOIN users u ON tm.user_id = u.uuid;
+    `;
+    const result = await pool.query(sql, [currentUserId]);
+    return result.rows;
+}
+
+//팀 목록 전체 조회 (팀 멤버 프로필이미지 포함)
+export const findAllWithProfile = async (currentUserId: string) => {
+    const sql = `
+        SELECT 
+            t.id AS team_id, 
+            t.name AS team_name,
+            MAX(CASE WHEN tm.user_id = $1 THEN 1 ELSE 0 END) OVER(PARTITION BY t.id) as is_member,
+            COUNT(tm.id) OVER(PARTITION BY t.id) AS member_count,
+            ARRAY_AGG(u.profile_image) OVER(
+                PARTITION BY t.id 
+                ORDER BY tm.id 
+                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) AS preview_images
         FROM teams t
         LEFT JOIN team_member tm ON t.id = tm.team_id
         LEFT JOIN users u ON tm.user_id = u.uuid;
