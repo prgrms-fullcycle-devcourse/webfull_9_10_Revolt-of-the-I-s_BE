@@ -9,7 +9,12 @@ import { authMiddleware } from "../utils/auth";
 const router: Router = Router();
 
 const signupSchema = z.object({
-  email: z.string().email("올바른 이메일 형식이 아닙니다."),
+  email: z
+    .string()
+    .email("올바른 이메일 형식이 아닙니다.")
+    .refine((val) => !val.endsWith("@gmail.com"), {
+      message: "구글 이메일은 구글 로그인을 이용해 주세요.",
+    }),
   name: z.string().min(1, "이름은 필수입니다."),
   phone: z.string().min(10, "전화번호 형식이 올바르지 않습니다."),
   password: z.string().min(8, "비밀번호는 8자 이상이어야 합니다.")
