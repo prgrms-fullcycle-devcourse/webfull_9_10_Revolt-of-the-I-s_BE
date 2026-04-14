@@ -39,64 +39,64 @@ paths:
   # # ──────────────────────────────────────────
 
   /auth/signup:
-      post:
-        tags: [Auth]
-        summary: 일반 회원가입
-        description: |
-          이메일, 비밀번호 등 정보와 **프로필 이미지 파일**을 받아 유저를 생성합니다.
-          파일 업로드를 위해 `multipart/form-data` 형식을 사용해야 합니다.
-        requestBody:
-          required: true
+    post:
+      tags: [Auth]
+      summary: 일반 회원가입
+      description: |
+        이메일, 비밀번호 등 정보와 **프로필 이미지 파일**을 받아 유저를 생성합니다.
+        파일 업로드를 위해 `multipart/form-data` 형식을 사용해야 합니다.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data: # JSON에서 변경
+            schema:
+              type: object
+              required: [email, password, name, phone]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: mail@istation.dev
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: password123!
+                name:
+                  type: string
+                  example: 홍길동
+                phone:
+                  type: string
+                  example: 010-1234-5678
+                github_url:
+                  type: string
+                  nullable: true
+                  example: https://github.com/username
+                profileImage: # S3 업로드용 파일 필드
+                  type: string
+                  format: binary
+                  description: 프로필 이미지 파일 (jpg, png, webp 등)
+      responses:
+        "201":
+          description: 회원가입 성공
           content:
-            multipart/form-data: # JSON에서 변경
+            application/json:
               schema:
-                type: object
-                required: [email, password, name, phone]
-                properties:
-                  email:
-                    type: string
-                    format: email
-                    example: mail@istation.dev
-                  password:
-                    type: string
-                    format: password
-                    minLength: 8
-                    example: password123!
-                  name:
-                    type: string
-                    example: 홍길동
-                  phone:
-                    type: string
-                    example: 010-1234-5678
-                  github_url:
-                    type: string
-                    nullable: true
-                    example: https://github.com/username
-                  profileImage: # S3 업로드용 파일 필드
-                    type: string
-                    format: binary
-                    description: 프로필 이미지 파일 (jpg, png, webp 등)
-        responses:
-          "201":
-            description: 회원가입 성공
-            content:
-              application/json:
-                schema:
-                  allOf:
-                    - $ref: "#/components/schemas/SuccessResponse"
-                    - type: object
-                      properties:
-                        data:
-                          type: object
-                          properties:
-                            uuid:
-                              type: string
-                              format: uuid
-                              example: 123e4567-e89b-12d3-a456-426614174000
-          "400":
-            $ref: "#/components/responses/BadRequest"
-          "409":
-            description: 이미 사용 중인 이메일
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          uuid:
+                            type: string
+                            format: uuid
+                            example: 123e4567-e89b-12d3-a456-426614174000
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: 이미 사용 중인 이메일
 
   /auth/login:
     post:
@@ -291,7 +291,11 @@ paths:
                         properties:
                           uuid: { type: string }
                           email: { type: string }
-                          profile_image: { type: string, example: "https://s3.../image.webp" }
+                          profile_image:
+                            {
+                              type: string,
+                              example: "https://s3.../image.webp",
+                            }
 
   # # ──────────────────────────────────────────
   # # 2. Users
@@ -367,7 +371,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-                
+
   /users/profile/image:
     patch:
       tags:
@@ -379,7 +383,7 @@ paths:
         1. 새로운 파일을 S3에 업로드합니다.
         2. DB의 `profile_image` 경로를 새 URL로 업데이트합니다.
         3. **기존에 저장되어 있던 S3 파일은 서버에서 자동으로 삭제합니다.**
-        
+
         반드시 요청 본문을 `multipart/form-data` 형식으로 전송해야 합니다.
       security:
         - bearerAuth: []
@@ -2271,6 +2275,9 @@ components:
           type: integer
           nullable: true
           example: 26
+        team_name:
+          type: string
+          example: "i-station"
         type:
           type: string
           enum:
