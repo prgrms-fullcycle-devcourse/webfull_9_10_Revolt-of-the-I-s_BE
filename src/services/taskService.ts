@@ -34,6 +34,7 @@ import {
   insertNotificationWithClient,
 } from "../repositories/notificationRepository";
 import { withTransaction } from "../config/db";
+import { findTeamByTeamId } from "../repositories/teamRepository";
 
 interface TaskQuantity {
   Todo: number;
@@ -41,6 +42,11 @@ interface TaskQuantity {
   Done: number;
   Checked: number;
 }
+
+const getTeamNameOrNull = async (teamId: number): Promise<string | null> => {
+  const team = await findTeamByTeamId(teamId);
+  return team?.name ?? null;
+};
 
 const getTeamTasksData = async (teamId: number) => {
   const tasks = await findTasksByTeam(teamId);
@@ -168,11 +174,14 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
     return newTask;
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   // 팀 전체 칸반 보드에 task 생성 실시간 반영
   await pusher.trigger(`team-${task.team_id}`, "task-created", {
     taskId: task.id,
     taskNumber: task.task_number,
     teamId: task.team_id,
+    teamName,
   });
 
   // 담당자에게 개인 알림
@@ -182,6 +191,7 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
       taskId: task.id,
       taskNumber: task.task_number,
       teamId: task.team_id,
+      teamName,
     });
 
     await pusher.trigger(`user-${task.worker_id}`, "new-notification", {
@@ -189,6 +199,7 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
       message: `🔔 #${task.task_number} 새로운 요청이 있습니다: ${task.title}`,
       taskId: task.id,
       teamId: task.team_id,
+      teamName,
     });
   }
 
@@ -248,11 +259,14 @@ const updateTask = catchAsync(async (req: Request, res: Response) => {
     return result;
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   // 팀 전체 칸반 보드에 task 수정 실시간 반영
   await pusher.trigger(`team-${task.team_id}`, "task-updated", {
     taskId: task.id,
     taskNumber: task.task_number,
     teamId: task.team_id,
+    teamName,
   });
 
   // 담당자에게 개인 알림
@@ -262,6 +276,7 @@ const updateTask = catchAsync(async (req: Request, res: Response) => {
       message: `🚨 #${task.task_number} 요청이 수정되었습니다.`,
       taskId: task.id,
       teamId: task.team_id,
+       teamName,
     });
   }
 
@@ -316,11 +331,14 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
     });
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   // 팀 전체 칸반 보드에 task 삭제 실시간 반영
   await pusher.trigger(`team-${task.team_id}`, "task-deleted", {
     taskId: task.id,
     taskNumber: task.task_number,
     teamId: task.team_id,
+    teamName,
   });
 
   // 요청자에게 개인 알림
@@ -329,6 +347,7 @@ const deleteTask = catchAsync(async (req: Request, res: Response) => {
     message: `❌ #${task.task_number} 요청이 삭제되었습니다.`,
     taskId: task.id,
     teamId: task.team_id,
+    teamName,
   });
 
   res
@@ -374,11 +393,14 @@ const acceptTask = catchAsync(async (req: Request, res: Response) => {
     message: `🆗 #${task.task_number} 요청이 수락되었습니다.`,
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   await pusher.trigger(`user-${task.requester_id}`, "new-notification", {
     type: "STATUS_CHANGED",
     message: `🆗 #${task.task_number} 요청이 수락되었습니다.`,
     taskId: task.id,
     teamId: task.team_id,
+    teamName,
   });
 
   res.status(StatusCodes.OK).json(SUCCESS(updated));
@@ -421,11 +443,14 @@ const submitTask = catchAsync(async (req: Request, res: Response) => {
     message: `✅ #${task.task_number} 요청이 완료 제출되었습니다.`,
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   await pusher.trigger(`user-${task.requester_id}`, "new-notification", {
     type: "STATUS_CHANGED",
     message: `✅ #${task.task_number} 요청이 완료 제출되었습니다.`,
     taskId: task.id,
     teamId: task.team_id,
+    teamName,
   });
 
   res.status(StatusCodes.OK).json(SUCCESS(updated));
@@ -468,11 +493,14 @@ const confirmTask = catchAsync(async (req: Request, res: Response) => {
     message: `👍 #${task.task_number} 요청이 최종 승인되었습니다.`,
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   await pusher.trigger(`user-${task.worker_id!}`, "new-notification", {
     type: "STATUS_CHANGED",
     message: `👍 #${task.task_number} 요청이 최종 승인되었습니다.`,
     taskId: task.id,
     teamId: task.team_id,
+    teamName,
   });
 
   res.status(StatusCodes.OK).json(SUCCESS(updated));
@@ -515,11 +543,14 @@ const rejectTask = catchAsync(async (req: Request, res: Response) => {
     message: `🙏 #${task.task_number} 요청이 반려되었습니다.`,
   });
 
+  const teamName = await getTeamNameOrNull(task.team_id);
+
   await pusher.trigger(`user-${task.worker_id!}`, "new-notification", {
     type: "STATUS_CHANGED",
     message: `🙏 #${task.task_number} 요청이 반려되었습니다.`,
     taskId: task.id,
     teamId: task.team_id,
+    teamName,
   });
 
   res.status(StatusCodes.OK).json(SUCCESS(updated));
@@ -573,12 +604,15 @@ const createComment = catchAsync(async (req: Request, res: Response) => {
   // pusher는 DB 작업이 아니므로 트랜잭션 밖에서 실행
   await pusher.trigger(`task-${taskId}`, "new-comment", comment);
 
+  const teamName = await getTeamNameOrNull(taskInfo.team_id);
+
   for (const recipientId of recipients) {
     await pusher.trigger(`user-${recipientId}`, "new-notification", {
       type: "NEW_COMMENT",
       message: `💬 #${taskInfo.task_number} 요청에 새로운 댓글이 달렸습니다.`,
       taskId: taskInfo.id,
       teamId: taskInfo.team_id,
+      teamName,
     });
   }
 
