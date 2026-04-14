@@ -12,6 +12,7 @@ export interface NotificationRow {
   id: number;
   user_id: string;
   team_id: number;
+  team_name: string;
   task_id: number | null;
   type: NotificationType;
   message: string;
@@ -63,9 +64,11 @@ export const findNotificationsByUser = async (
   userId: string,
 ): Promise<NotificationRow[]> => {
   const result = await pool.query(
-    `SELECT * FROM notifications
-     WHERE user_id = $1
-     ORDER BY created_at DESC`,
+    `SELECT n.*, t.name AS team_name
+     FROM notifications n
+     JOIN teams t ON n.team_id = t.id
+     WHERE n.user_id = $1
+     ORDER BY n.created_at DESC`,
     [userId],
   );
   return result.rows;
@@ -76,9 +79,11 @@ export const findUnreadNotifications = async (
   userId: string,
 ): Promise<NotificationRow[]> => {
   const result = await pool.query(
-    `SELECT * FROM notifications
-     WHERE user_id = $1 AND is_read = false
-     ORDER BY created_at DESC`,
+    `SELECT n.*, t.name AS team_name
+     FROM notifications n
+     JOIN teams t ON n.team_id = t.id
+     WHERE n.user_id = $1 AND is_read = false
+     ORDER BY n.created_at DESC`,
     [userId],
   );
   return result.rows;
