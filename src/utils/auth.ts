@@ -11,6 +11,8 @@ declare global {
         uuid: string;
         email: string;
         name: string;
+        profileImage?: string;
+
       };
       verifiedTeamId?: number;
       taskInfo?: {
@@ -42,11 +44,13 @@ export const authMiddleware = (
       id?: string;
       email: string;
       name: string;
+      profileImage?: string;
     };
     req.user = {
       uuid: decoded.uuid ?? decoded.id!,
       email: decoded.email,
       name: decoded.name,
+      profileImage: decoded.profileImage!
     };
     next();
   } catch (err) {
