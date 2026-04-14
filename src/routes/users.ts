@@ -19,6 +19,7 @@ router.get("/me", authMiddleware, catchAsync(async (req: any, res: Response) => 
         uuid: user?.uuid,
         email: user?.email,
         name: user?.name,
+        profileImage: user?.profileImage,
       },
       error: null,
     });

@@ -61,7 +61,7 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
             uuid: result.user.uuid,
             email: result.user.email,
             name: result.user.name,
-            profile_image: null
+            profile_image: result.user.profile_image,
           },
           meta: null,
         },
