@@ -17,7 +17,7 @@ router.use(authMiddleware);
 
 // GET
 router.get('/', getAllTeams);
-router.get('/:teamId/members', teamMemberMiddleware, getTeamMembers);
+router.get('/:teamId/members', teamMemberMiddleware, getAllTeams);
 router.get('/:teamId/members/active', teamMemberMiddleware, getActiveMembers);
 
 // POST

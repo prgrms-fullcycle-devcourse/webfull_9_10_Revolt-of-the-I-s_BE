@@ -16,6 +16,7 @@ import {
 } from "../repositories/teamRepository";
 
 // GET /teams - 팀 목록 전체 조회
+// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (임시)
 export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.uuid;
   const rows = await findAllWithMembers(userId);
@@ -54,7 +55,7 @@ export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
 });
 
-// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회
+// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (프론트 연결 전)
 export const getTeamMembers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const teamId = req.verifiedTeamId!;
