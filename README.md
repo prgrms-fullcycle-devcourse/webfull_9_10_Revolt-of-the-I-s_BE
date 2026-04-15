@@ -3,7 +3,7 @@
 
 > **팀 협업 도구 서비스** | Node.js + TypeScript + Express + PostgreSQL (Neon)
 
----
+</br>
 
 ## 📌 서비스 소개
 
@@ -18,7 +18,7 @@
 - 실시간 알림으로 팀원의 변경사항 즉시 확인
 - 회의록 · 퀵링크 · PDF를 한 곳에서 관리
 
----
+</br>
 
 ## 💡 기획 배경
 
@@ -30,15 +30,14 @@
 | 진행 상황의 불투명성 | 담당자가 확인했는지, 현재 작업 중인지 알 수 없어 반복적인 재확인 발생 |
 | 소통의 피로도        | "지금 계세요?", "언제 완료되나요?" 등 불필요한 질의로 인한 몰입 깨짐  |
 
----
+</br>
 
 ## 🎯 목표
 
 - **Ticket-Based Workflow** : 모든 요청을 카드화하여 누락 없는 업무 관리
 - **Live Status** : 팀원 상태 배지로 불필요한 핑(Ping) 없이 소통 타이밍 자율 조절
 - **History Log** : 업무 이력을 데이터로 남겨 개인 기여도 증명 및 팀 회고 활용
-
----
+</br>
 
 ## 🏗️ 기술 스택
 
@@ -55,8 +54,7 @@
 | API 문서       | OpenAPI 3.0 (YAML) + Swagger UI (swagger-ui-express)                                                     |
 | **기타**       | CORS + 식별자 (uuid)                                                                                     |
 | 패키지 매니저  | pnpm, ts-node / tsx                                                                                      |
-
----
+</br>
 
 ## 🔑 핵심 기능
 
@@ -98,7 +96,7 @@
 - 태스크 변경 이력 자동 기록 (생성, 수정, 삭제, 상태 변경)
 - 트랜잭션 내 원자적 로그 저장
 
----
+</br>
 
 ## 👨‍💻 팀원 역할
 
@@ -118,19 +116,19 @@
 | 허송희 | 팀원 정보 (목록/포지션 수정) / 문서 & 퀵링크 (조회/생성/삭제) / 회의록 (조회/생성/수정/삭제)     |
 | 김병성 | 로그인/회원가입 (Google OAuth 포함) / 프로필 이미지 업로드 / 팀 로비 (조회/생성/입장/탈퇴)       |
 
----
+</br>
 
 ## 🗄️ ERD
 
 <img width="654" height="544" alt="erd" src="https://github.com/user-attachments/assets/7bbf1cb2-7bad-4663-b55e-0f656aef3ef8" />
 
----
+</br>
 
 ## ✅ 아키텍처
 
 <img width="607" height="727" alt="ark" src="https://github.com/user-attachments/assets/dcf26126-6b3a-40e4-8422-6fa2d2da279b" />
 
----
+</br>
 
 ## 📁 프로젝트 구조
 ```
@@ -162,8 +160,7 @@ src/
 └── server.ts # 서버 시작 + 에러 핸들러
 
 ````
-
----
+</br>
 
 ## ⚙️ 환경변수 (.env)
 
@@ -194,8 +191,6 @@ PUSHER_CLUSTER=
 # --- Server Configuration ---
 PORT=
 ````
-
----
 
 ## 🚀 실행 방법
 
