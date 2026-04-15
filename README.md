@@ -55,17 +55,17 @@
 
 | 구분           | 기술                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| Runtime        | ![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)                                                                               |
-| Framework      | ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=white)                                                                                             |
-| Database       | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=PostgreSQL&logoColor=white) (Neon — Serverless), pg로 직접 쿼리                                                           |
-| Validation | Zod                                                                                                      |
-| 인증           | JWT (jsonwebtoken) + Google OAuth2 (google-auth-library) + 비밀번호 해싱 (bcrypt) + 쿠키 (cookie-parser) |
-| 실시간         | Pusher                                                                                                   |
-| 파일 저장      | AWS S3 (@aws-sdk/client-s3, multer + multer-s3)                                                          |
-| 배포           | Render                                                                                                   |
-| API 문서       | OpenAPI 3.0 (YAML) + Swagger UI (swagger-ui-express)                                                     |
+| **Runtime**        | ![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)                                                                               |
+| **Framework**      | ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=white)                                                                                             |
+| **Database**       | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=PostgreSQL&logoColor=white) (Neon — Serverless), pg로 직접 쿼리                                                           |
+| **Validation** | Zod                                                                                                      |
+| **인증**          | JWT (jsonwebtoken) + Google OAuth2 (google-auth-library) + 비밀번호 해싱 (bcrypt) + 쿠키 (cookie-parser) |
+| **실시간**         | Pusher                                                                                                   |
+| **파일 저장**      | AWS S3 (@aws-sdk/client-s3, multer + multer-s3)                                                          |
+| **배포**           | Render                                                                                                   |
+| **API 문서**       | OpenAPI 3.0 (YAML) + Swagger UI (swagger-ui-express)                                                     |
 | **기타**       | CORS + 식별자 (uuid)                                                                                     |
-| 패키지 매니저  | pnpm, ts-node / tsx                                                                                      |
+| **패키지 매니저** | pnpm, ts-node / tsx                                                                                      |
 </br>
 
 ## 🔑 핵심 기능
@@ -79,9 +79,9 @@
 
 ### 👥 팀 (Team)
 
-- 팀 생성 / PIN 번호로 가입 / 탈퇴
+- 팀 생성 / PIN 번호(bcrypt 암호화)로 가입 / 탈퇴
 - 멤버 포지션 · 상태(업무 중, 회의 중, 자리 비움, 쉬는 중) 관리
-- 마지막 멤버 탈퇴 시 팀 자동 삭제
+- 팀 생성 · 탈퇴 트랜잭션 처리 (마지막 멤버 탈퇴 시 팀 자동 삭제)
 
 ### ✅ 태스크 — 칸반 보드 (Task)
 
@@ -116,9 +116,9 @@
 
 | 프로필 | 이름 | 담당 기능 |
 | :---: | :----: | :--- |
-| <img src="https://github.com/user-attachments/assets/9c21ca0a-a480-451b-9380-3517431f93bb" width="100" height="100"> | **장건영** | • **auth**: 회원가입, 로그인, 로그아웃, 구글 OAuth <br> • **user**: 로그인 유저 조회, 내 상태 업데이트 |
-| <img src="https://github.com/user-attachments/assets/5b9368b3-6ffd-42ed-b5fc-7f732812d882" width="100" height="100"> | **강영아** | • **log**: 팀 활동 로그 조회, 개인 활동 로그 조회 <br> • **task**: 목록 조회, 생성, 수정, 삭제, 상세 조회, 상태 변경(수락/제출/승인/반려) <br> • **Comment**: 작성, 수정, 삭제 <br> • **notification**: 알림 전체 조회, 읽지 않은 알림 조회, 읽음 처리, 전체 읽음 처리 <br> • **DB**: 마이그레이션 (Render → Neon) |
-| <img src="https://github.com/user-attachments/assets/3eea9004-0fa9-4999-b37e-14fef2f77b7b" width="100" height="100"> | **김가영** | • **team**: 팀 목록 조회, 팀 생성, 팀 탈퇴, 팀 가입, 포지션 수정, 활동 중인 팀원 목록, 팀 멤버 목록 조회 <br> • **archive**: 회의록 작성/수정/삭제/목록/상세, 퀵링크 생성/조회/삭제, 문서 등록/조회/삭제 |                                                                           |
+| <img src="https://github.com/user-attachments/assets/9c21ca0a-a480-451b-9380-3517431f93bb" width="100" height="100"> | **장건영** | • **`auth`**: 회원가입, 로그인, 로그아웃, 구글 OAuth <br> • **`user`**: 로그인 유저 조회, 내 상태 업데이트 |
+| <img src="https://github.com/user-attachments/assets/5b9368b3-6ffd-42ed-b5fc-7f732812d882" width="100" height="100"> | **강영아** | • **`log`**: 팀 활동 로그 조회, 개인 활동 로그 조회 <br> • **`task`**: 목록 조회, 생성, 수정, 삭제, 상세 조회, 상태 변경(수락/제출/승인/반려) <br> • **`Comment`**: 작성, 수정, 삭제 <br> • **`notification`**: 알림 전체 조회, 읽지 않은 알림 조회, 읽음 처리, 전체 읽음 처리 <br> • **`DB`**: 마이그레이션 (Render → Neon) |
+| <img src="https://github.com/user-attachments/assets/3eea9004-0fa9-4999-b37e-14fef2f77b7b" width="100" height="100"> | **김가영** | • **`team`**: 팀 목록 조회, 팀 생성, 팀 탈퇴, 팀 가입, 포지션 수정, 활동 중인 팀원 목록, 팀 멤버 목록 조회 <br> • **`archive`**: 회의록 작성/수정/삭제/목록/상세, 퀵링크 생성/조회/삭제, 문서 등록/조회/삭제 |                                                                           |
 
 ### Frontend
 
