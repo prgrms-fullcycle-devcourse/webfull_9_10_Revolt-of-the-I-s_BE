@@ -9,7 +9,7 @@
 
 > "묻지 말고 확인하자, 묻히지 않게 기록하자!"
 
-\***\*i-Station\*\***은 소규모 개발팀을 위한 **협업 신뢰 시스템**입니다.
+**i-Station**은 소규모 개발팀을 위한 **협업 신뢰 시스템**입니다.
 
 슬랙 메시지는 읽고 지나치기 쉽고, Jira는 너무 복잡합니다.
 
@@ -22,7 +22,7 @@
 
 ## 💡 기획 배경
 
-소규모 개발팀에서 흔히 발생하는 3가지 문제
+소규모 개발팀에서 흔히 발생하는 **3가지 노이즈**를 해결합니다.
 
 | 문제                 | 설명                                                                  |
 | -------------------- | --------------------------------------------------------------------- |
@@ -40,6 +40,12 @@
 </br>
 
 ## 🏗️ 기술 스택
+
+### 핵심 라이브러리
+![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=PostgreSQL&logoColor=white)
 
 | 구분           | 기술                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
@@ -100,13 +106,13 @@
 
 ## 👨‍💻 팀원 역할
 
-### Backend
+### 👨‍💻 Backend
 
-| 프로필                                                                                                     | 이름   | 담당 기능                                                                                                                                                                                                                                                                       |
-| ---------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <img width="300" height="300" alt="KakaoTalk_20250709_123818873_01" src="https://github.com/user-attachments/assets/e4a07a88-da98-4687-8a93-6a95923d0160" /> | 장건영 | `auth`</br>회원가입, 로그인, 로그아웃, 구글 OAuth </br></br> `user`</br>로그인 유저 조회, 내 상태 업데이트                                                                                                                                                                                     |
-| <img width="300" height="300" alt="KakaoTalk_Photo_2025-12-30-12-19-13 (1)" src="https://github.com/user-attachments/assets/e339ee49-85e7-40f4-9fcc-6766cc62b07f" /> | 강영아 | `log`</br>팀 활동 로그 조회, 개인 활동 로그 조회 </br></br> `task`</br>목록 조회, 생성, 수정, 삭제, 상세 조회, 상태 변경(수락/제출/승인/반려) </br></br> `Comment`</br>작성, 수정, 삭제 </br></br> `notification`</br>알림 전체 조회, 읽지 않은 알림 조회, 읽음 처리, 전체 읽음 처리 </br></br> DB 마이그레이션 (Render → Neon) |
-| <img width="300" height="300" alt="image (10)" src="https://github.com/user-attachments/assets/1a37049d-aec2-4a43-ae6d-452fbef42095" /> | 김가영 | `team`</br>팀 목록 조회, 팀 생성, 팀 탈퇴, 팀 가입, 포지션 수정, 활동 중인 팀원 목록, 팀 멤버 목록 조회 </br></br> `archive`</br>회의록 작성/수정/삭제/목록/상세, 퀵링크 생성/조회/삭제, 문서 등록/조회/삭제                                                                                   |
+| 프로필 | 이름 | 담당 기능 |
+| :---: | :---: | :--- |
+| <img src="https://github.com/user-attachments/assets/e4a07a88-da98-4687-8a93-6a95923d0160" width="100" height="100"> | **장건영** | • **auth**: 회원가입, 로그인, 로그아웃, 구글 OAuth <br> • **user**: 로그인 유저 조회, 내 상태 업데이트 |
+| <img src="https://github.com/user-attachments/assets/e339ee49-85e7-40f4-9fcc-6766cc62b07f" width="100" height="100"> | **강영아** | • **log**: 팀 활동 로그 조회, 개인 활동 로그 조회 <br> • **task**: 목록 조회, 생성, 수정, 삭제, 상세 조회, 상태 변경(수락/제출/승인/반려) <br> • **Comment**: 작성, 수정, 삭제 <br> • **notification**: 알림 전체 조회, 읽지 않은 알림 조회, 읽음 처리, 전체 읽음 처리 <br> • **DB**: 마이그레이션 (Render → Neon) |
+| <img src="https://github.com/user-attachments/assets/1a37049d-aec2-4a43-ae6d-452fbef42095" width="100" height="100"> | **김가영** | • **team**: 팀 목록 조회, 팀 생성, 팀 탈퇴, 팀 가입, 포지션 수정, 활동 중인 팀원 목록, 팀 멤버 목록 조회 <br> • **archive**: 회의록 작성/수정/삭제/목록/상세, 퀵링크 생성/조회/삭제, 문서 등록/조회/삭제 |                                                                           |
 
 ### Frontend
 
@@ -131,33 +137,33 @@
 </br>
 
 ## 📁 프로젝트 구조
-```
 
+```
 src/
 ├── config/
-│ ├── db.ts # PostgreSQL 연결 풀 + 트랜잭션 유틸
-│ └── swagger.yaml # API 문서 정의 (Swagger)
-├── repositories/ # DB 쿼리 함수 (순수 SQL)
-│ ├── taskRepository.ts
-│ ├── logRepository.ts
-│ ├── notificationRepository.ts
-│ └── ...
-├── services/ # 비즈니스 로직 + 트랜잭션 처리
-│ ├── taskService.ts
-│ └── ...
-├── routes/ # Express 라우터 및 엔드포인트 정의
-├── utils/ # 공통 유틸리티 및 전역 미들웨어
-│ ├── middlewares/  
-│ │ ├── auth.ts # JWT 기반 사용자 인증
-│ │ ├── teamMember.ts# 팀 소속 및 접근 권한 체크
-│ │ └── validators.ts# 요청 데이터 유효성 검증
-│ ├── constants/
-│ │ └── response.ts # 일관된 API 응답 규격(SUCCESS/ERROR) 정의
-│ └── helpers/  
-│ ├── s3.ts # AWS S3 파일 업로드 및 관리 인터페이스
-│ └── logger.ts # 서버 실행 로그 및 에러 추적 시스템
-├── app.ts # Express 앱 설정
-└── server.ts # 서버 시작 + 에러 핸들러
+│   ├── db.ts              # PostgreSQL 연결 풀 + 트랜잭션 유틸
+│   └── swagger.yaml       # API 문서 정의 (Swagger)
+├── repositories/          # DB 쿼리 함수 (순수 SQL)
+│   ├── taskRepository.ts
+│   ├── logRepository.ts
+│   ├── notificationRepository.ts
+│   └── ...
+├── services/              # 비즈니스 로직 + 트랜잭션 처리
+│   ├── taskService.ts
+│   └── ...
+├── routes/                # Express 라우터 및 엔드포인트 정의
+├── utils/                 # 공통 유틸리티 및 전역 미들웨어
+│   ├── middlewares/  
+│   │   ├── auth.ts        # JWT 기반 사용자 인증
+│   │   ├── teamMember.ts  # 팀 소속 및 접근 권한 체크
+│   │   └── validators.ts  # 요청 데이터 유효성 검증
+│   ├── constants/
+│   │   └── response.ts    # 일관된 API 응답 규격(SUCCESS/ERROR) 정의
+│   └── helpers/  
+│       ├── s3.ts          # AWS S3 파일 업로드 및 관리 인터페이스
+│       └── logger.ts      # 서버 실행 로그 및 에러 추적 시스템
+├── app.ts                 # Express 앱 설정
+└── server.ts              # 서버 시작 + 에러 핸들러
 
 ````
 </br>
@@ -208,4 +214,3 @@ pnpm build
 pnpm start
 ```
 
-```
