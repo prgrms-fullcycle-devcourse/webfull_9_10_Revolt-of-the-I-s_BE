@@ -106,9 +106,9 @@
 
 | 프로필                                                                                                     | 이름   | 담당 기능                                                                                                                                                                                                                                                                       |
 | ---------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <img width="354" height="472" alt="KakaoTalk_20250709_123818873_01" src="https://github.com/user-attachments/assets/e4a07a88-da98-4687-8a93-6a95923d0160" /> | 장건영 | `auth`: 회원가입, 로그인, 로그아웃, 구글 OAuth / `user`: 로그인 유저 조회, 내 상태 업데이트                                                                                                                                                                                     |
-| <img width="2880" height="2160" alt="KakaoTalk_Photo_2025-12-30-12-19-13 (1)" src="https://github.com/user-attachments/assets/e339ee49-85e7-40f4-9fcc-6766cc62b07f" /> | 강영아 | `log`: 팀 활동 로그 조회, 개인 활동 로그 조회 / `task`: 목록 조회, 생성, 수정, 삭제, 상세 조회, 상태 변경(수락/제출/승인/반려) / `Comment`: 작성, 수정, 삭제 / `notification`: 알림 전체 조회, 읽지 않은 알림 조회, 읽음 처리, 전체 읽음 처리 / DB 마이그레이션 (Render → Neon) |
-| <img width="2218" height="2218" alt="image (10)" src="https://github.com/user-attachments/assets/1a37049d-aec2-4a43-ae6d-452fbef42095" /> | 김가영 | `team`: 팀 목록 조회, 팀 생성, 팀 탈퇴, 팀 가입, 포지션 수정, 활동 중인 팀원 목록, 팀 멤버 목록 조회 / `archive`: 회의록 작성/수정/삭제/목록/상세, 퀵링크 생성/조회/삭제, 문서 등록/조회/삭제                                                                                   |
+| <img width="300" height="300" alt="KakaoTalk_20250709_123818873_01" src="https://github.com/user-attachments/assets/e4a07a88-da98-4687-8a93-6a95923d0160" /> | 장건영 | `auth`: 회원가입, 로그인, 로그아웃, 구글 OAuth / `user`: 로그인 유저 조회, 내 상태 업데이트                                                                                                                                                                                     |
+| <img width="300" height="300" alt="KakaoTalk_Photo_2025-12-30-12-19-13 (1)" src="https://github.com/user-attachments/assets/e339ee49-85e7-40f4-9fcc-6766cc62b07f" /> | 강영아 | `log`: 팀 활동 로그 조회, 개인 활동 로그 조회 / `task`: 목록 조회, 생성, 수정, 삭제, 상세 조회, 상태 변경(수락/제출/승인/반려) / `Comment`: 작성, 수정, 삭제 / `notification`: 알림 전체 조회, 읽지 않은 알림 조회, 읽음 처리, 전체 읽음 처리 / DB 마이그레이션 (Render → Neon) |
+| <img width="300" height="300" alt="image (10)" src="https://github.com/user-attachments/assets/1a37049d-aec2-4a43-ae6d-452fbef42095" /> | 김가영 | `team`: 팀 목록 조회, 팀 생성, 팀 탈퇴, 팀 가입, 포지션 수정, 활동 중인 팀원 목록, 팀 멤버 목록 조회 / `archive`: 회의록 작성/수정/삭제/목록/상세, 퀵링크 생성/조회/삭제, 문서 등록/조회/삭제                                                                                   |
 
 ### Frontend
 
@@ -122,13 +122,13 @@
 
 ## 🗄️ ERD
 
-![image.png](attachment:53a9f3fc-24d8-4b97-97a0-7e3bcbf11ebe:image.png)
+<img width="654" height="544" alt="erd" src="https://github.com/user-attachments/assets/7bbf1cb2-7bad-4663-b55e-0f656aef3ef8" />
 
 ---
 
 ## ✅ 아키텍처
 
-![image.png](attachment:7306a9c2-3fb5-4330-bb55-373994dff42d:image.png)
+<img width="607" height="727" alt="ark" src="https://github.com/user-attachments/assets/dcf26126-6b3a-40e4-8422-6fa2d2da279b" />
 
 ---
 
