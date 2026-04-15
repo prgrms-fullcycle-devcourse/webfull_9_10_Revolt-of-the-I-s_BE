@@ -1,7 +1,7 @@
 import express, { Request, Response, Express } from "express";
 import cors from "cors";
-import { setupSwagger } from "./utils/swagger";
-import apiRouter from "./routes/route";
+import { setupSwagger } from "./config/swagger";
+import apiRouter from "./routes/main.routes";
 import cookieParser from "cookie-parser";
 
 const app: Express = express();

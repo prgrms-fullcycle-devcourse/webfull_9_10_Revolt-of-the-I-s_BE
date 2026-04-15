@@ -1,6 +1,6 @@
 import pool from "../config/db";
 import { PoolClient } from "pg";
-import { TaskUserInfo } from "./taskRepository";
+import { TaskUserInfo } from "./task.repository";
 
 export interface InsertLogInput {
   teamId: number;

@@ -1,10 +1,10 @@
 import express from "express";
-import authRouter from "./auth";
-import usersRouter from "./users";
-import teamsRouter from "./teams";
-import tasksRouter from "./tasks";
-import archivesRouter from "./archives";
-import notificationsRouter from "./notifications";
+import authRouter from "./auth.routes";
+import usersRouter from "./users.routes";
+import teamsRouter from "./teams.routes";
+import tasksRouter from "./tasks.routes";
+import archivesRouter from "./archive.routes";
+import notificationsRouter from "./notifications.routes";
 
 const router: import("express").Router = express.Router();
 

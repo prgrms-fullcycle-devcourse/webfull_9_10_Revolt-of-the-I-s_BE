@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
-import catchAsync, { SUCCESS, ERROR, AppError } from "../utils/response";
+import catchAsync, { SUCCESS, ERROR, AppError } from "../utils/constants/response";
 import { StatusCodes } from "http-status-codes";
-import { deleteFileFromS3 } from "../utils/s3";
-import * as v from "../utils/validators";
+import { deleteFileFromS3 } from "../utils/helpers/s3";
+import * as v from "../utils/middlewares/validators";
 import {
   findByTeamIdAndType,
   findById,
   create,
   update,
   deleteById,
-} from "../repositories/archiveRepository";
+} from "../repositories/archive.repository";
 
 
 // =========== 회의록 ===========

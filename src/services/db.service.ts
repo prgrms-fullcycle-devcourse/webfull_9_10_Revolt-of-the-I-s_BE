@@ -5,7 +5,7 @@ import {
   deleteTeamMemberWithClient,
   countTeamMembersWithClient,
   removeTeamWithClient,
-} from "../repositories/teamRepository";
+} from "../repositories/team.repository";
 
 // 팀 생성 트랜잭션
 export const createTeamWithMember = async (data: {

@@ -8,9 +8,9 @@ import {
   getActiveMembers,
   getTeamMembers,
   getAllTeamsWithProfile,
-} from '../services/teamService';
-import { authMiddleware } from "../utils/auth";
-import { teamMemberMiddleware } from "../utils/teamMember";
+} from '../services/team.service';
+import { authMiddleware } from "../utils/middlewares/auth";
+import { teamMemberMiddleware } from "../utils/middlewares/teamMember";
  
 const router: import("express").Router = express.Router();
 

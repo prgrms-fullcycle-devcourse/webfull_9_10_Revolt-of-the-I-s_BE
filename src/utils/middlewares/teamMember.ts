@@ -3,10 +3,10 @@ import { StatusCodes } from "http-status-codes";
 import {
   findTeamMember,
   findTeamByTeamId,
-} from "../repositories/teamRepository";
-import { ERROR } from "../utils/response";
-import catchAsync from "../utils/response";
-import pool from "../config/db";
+} from "../../repositories/team.repository";
+import { ERROR } from "../constants/response";
+import catchAsync from "../constants/response";
+import pool from "../../config/db";
 
 export const teamMemberMiddleware = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

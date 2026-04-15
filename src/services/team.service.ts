@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import catchAsync, { ERROR, SUCCESS, AppError } from "../utils/response";
+import catchAsync, { ERROR, SUCCESS, AppError } from "../utils/constants/response";
 import bcrypt from "bcrypt";
-import * as v from "../utils/validators";
+import * as v from "../utils/middlewares/validators";
 import { StatusCodes } from "http-status-codes";
-import { createTeamWithMember, leaveTeamTransaction } from "./dbService";
+import { createTeamWithMember, leaveTeamTransaction } from "./db.service";
 import {
   findAllWithMembers,
   updateMemberPosition,
@@ -14,7 +14,7 @@ import {
   insertTeamMember,
   findMembersByTeamId,
   findAllWithProfile,
-} from "../repositories/teamRepository";
+} from "../repositories/team.repository";
 
 
 // GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (임시)

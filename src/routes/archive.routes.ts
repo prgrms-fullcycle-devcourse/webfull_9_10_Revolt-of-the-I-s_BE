@@ -11,11 +11,11 @@ import {
   getDocumentList,
   createDocument,
   deleteDocument,
-} from '../services/archiveService';
-import { authMiddleware } from "../utils/auth";
-import { teamMemberMiddleware } from "../utils/teamMember";
+} from '../services/archive.service';
+import { authMiddleware } from "../utils/middlewares/auth";
+import { teamMemberMiddleware } from "../utils/middlewares/teamMember";
 
-import { upload } from '../utils/s3';
+import { upload } from '../utils/helpers/s3';
  
 const router: import("express").Router = express.Router();
 

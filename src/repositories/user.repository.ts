@@ -1,5 +1,5 @@
 import pool from '../config/db';
-import { UserStatus } from "../utils/validators"
+import { UserStatus } from "../utils/middlewares/validators"
 
 export interface UserEntity {
     uuid: string;

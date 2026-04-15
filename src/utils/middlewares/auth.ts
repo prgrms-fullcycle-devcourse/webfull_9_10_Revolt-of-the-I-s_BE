@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 import { StatusCodes } from "http-status-codes";
-import { ERROR } from "../utils/response";
+import { ERROR } from "../constants/response";
 
 declare global {
   namespace Express {
