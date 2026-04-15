@@ -53,17 +53,11 @@
 
 ## 🏗️ 기술 스택
 
-### 핵심 라이브러리
-![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=PostgreSQL&logoColor=white)
-
 | 구분           | 기술                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| Runtime        | Node.js + TypeScript                                                                                     |
-| Framework      | Express v5                                                                                               |
-| Database       | PostgreSQL (Neon — Serverless), pg로 직접 쿼리                                                           |
+| Runtime        | ![Node.js](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)                                                                               |
+| Framework      | ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=white)                                                                                             |
+| Database       | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=PostgreSQL&logoColor=white) (Neon — Serverless), pg로 직접 쿼리                                                           |
 | Validation | Zod                                                                                                      |
 | 인증           | JWT (jsonwebtoken) + Google OAuth2 (google-auth-library) + 비밀번호 해싱 (bcrypt) + 쿠키 (cookie-parser) |
 | 실시간         | Pusher                                                                                                   |
