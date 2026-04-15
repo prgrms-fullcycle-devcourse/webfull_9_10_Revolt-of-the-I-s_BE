@@ -5,8 +5,8 @@ import {
   getUnreadNotifications,
   readNotification,
   readAllNotifications,
-} from "../services/notificationService";
-import { authMiddleware } from "../utils/auth";
+} from "../services/notification.service";
+import { authMiddleware } from "../utils/middlewares/auth";
 
 const router: import("express").Router = express.Router();
 

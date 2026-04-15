@@ -13,9 +13,9 @@ import {
   submitTask,
   confirmTask,
   rejectTask,
-} from "../services/taskService";
-import { authMiddleware } from "../utils/auth";
-import { teamMemberMiddleware } from "../utils/teamMember";
+} from "../services/task.service";
+import { authMiddleware } from "../utils/middlewares/auth";
+import { teamMemberMiddleware } from "../utils/middlewares/teamMember";
 
 const router: import("express").Router = express.Router();
 

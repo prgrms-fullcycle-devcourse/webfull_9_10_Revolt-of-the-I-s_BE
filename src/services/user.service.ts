@@ -1,11 +1,11 @@
-import * as userRepo from '../repositories/userRepository';
+import * as userRepo from '../repositories/user.repository';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { AppError } from "../utils/response";
+import { AppError } from "../utils/constants/response";
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
 import pusher from '../config/pusher';
-import { deleteFileFromS3 } from '../utils/s3';
+import { deleteFileFromS3 } from '../utils/helpers/s3';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET

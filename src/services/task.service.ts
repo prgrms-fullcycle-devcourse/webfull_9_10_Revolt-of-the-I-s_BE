@@ -16,25 +16,25 @@ import {
   updateTaskStatusWithClient,
   updateTaskById,
   updateTaskWithClient,
-} from "../repositories/taskRepository";
+} from "../repositories/task.repository";
 import pusher from "../config/pusher";
 import {
   findLogsByTeam,
   insertLog,
   insertLogWithClient,
-} from "../repositories/logRepository";
+} from "../repositories/log.repository";
 import catchAsync, {
   ERROR,
   INVALID_STATUS_ERROR,
   SUCCESS,
-} from "../utils/response";
-import { isValidId, isValidString, isValidTitle } from "../utils/validators";
+} from "../utils/constants/response";
+import { isValidId, isValidString, isValidTitle } from "../utils/middlewares/validators";
 import {
   insertNotification,
   insertNotificationWithClient,
-} from "../repositories/notificationRepository";
+} from "../repositories/notification.repository";
 import { withTransaction } from "../config/db";
-import { findTeamByTeamId } from "../repositories/teamRepository";
+import { findTeamByTeamId } from "../repositories/team.repository";
 
 interface TaskQuantity {
   Todo: number;

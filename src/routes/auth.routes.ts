@@ -1,10 +1,10 @@
 import { Router, Request, Response, NextFunction } from "express";
-import catchAsync, { AppError } from "../utils/response";
-import * as userService from "../services/userService";
+import catchAsync, { AppError } from "../utils/constants/response";
+import * as userService from "../services/user.service";
 import { z } from 'zod';
-import { validate } from "../utils/validators";
-import { upload } from "../utils/s3";
-import { authMiddleware } from "../utils/auth";
+import { validate } from "../utils/middlewares/validators";
+import { upload } from "../utils/helpers/s3";
+import { authMiddleware } from "../utils/middlewares/auth";
 
 const router: Router = Router();
 

@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import catchAsync, { ERROR, SUCCESS } from "../utils/response";
-import { isValidId } from "../utils/validators";
+import catchAsync, { ERROR, SUCCESS } from "../utils/constants/response";
+import { isValidId } from "../utils/middlewares/validators";
 import {
   findNotificationsByUser,
   findUnreadNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   countUnreadNotifications,
-} from "../repositories/notificationRepository";
+} from "../repositories/notification.repository";
 import pusher from "../config/pusher";
 
 // 내 알림 전체 조회
