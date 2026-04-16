@@ -39,19 +39,27 @@ export const create = async (data: {
 }
 
 // 수정
-export const update = async (archiveId: number, data: { title?: string; content?: string }) => {
+export const update = async (archiveId: number, data: { title?: string; content?: string; version: number }) => {
     const sql = `
         UPDATE archives 
         SET title = COALESCE($1, title), 
-            content = COALESCE($2, content) 
-        WHERE id = $3 
-        RETURNING id, team_id, type, title, content, created_at;
+            content = COALESCE($2, content),
+            version = version + 1
+        WHERE id = $3 AND version = $4
+        RETURNING id, team_id, type, title, content, created_at, version;
     `;
-    const result = await pool.query(sql, [data.title, data.content, archiveId]);
+    const result = await pool.query(sql, [data.title, data.content, archiveId, data.version]);
     return result.rows[0];
 }
 
-// 삭제
+// 회의록 삭제 (버전포함)
+export const deleteMeetingById = async (archiveId: number, version: number) => {
+  const sql = `DELETE FROM archives WHERE id = $1 AND version = $2 RETURNING id;`;
+  const result = await pool.query(sql, [archiveId, version]);
+  return result.rows[0];
+}
+
+// 삭제 
 export const deleteById = async (archiveId: number) => {
   const sql = `DELETE FROM archives WHERE id = $1;`;
   return await pool.query(sql, [archiveId]);
