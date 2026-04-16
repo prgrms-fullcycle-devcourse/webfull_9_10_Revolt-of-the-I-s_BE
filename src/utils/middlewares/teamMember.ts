@@ -14,7 +14,6 @@ export const teamMemberMiddleware = catchAsync(
 
     const { taskId, commentId, archiveId, linkId, docId } = req.params;
 
-    // 파라미터에 teamId가 있다면 미리 담아둠
     let teamId: any = req.params.teamId;
 
     if (taskId) {

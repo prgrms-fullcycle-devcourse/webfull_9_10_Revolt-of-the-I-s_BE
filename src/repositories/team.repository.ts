@@ -22,7 +22,7 @@ export const findAllWithMembers = async (currentUserId: string) => {
     return result.rows;
 }
 
-//팀 목록 전체 조회 (팀 멤버 프로필이미지 포함)
+//팀 목록 전체 조회 (로비용 - 팀 멤버 프로필이미지만 포함)
 export const findAllWithProfile = async (currentUserId: string) => {
     const sql = `
         SELECT 
@@ -43,7 +43,7 @@ export const findAllWithProfile = async (currentUserId: string) => {
     return result.rows;
 }
 
-// 특정 팀 멤버 목록 조회 
+// 특정 팀 멤버의 목록 조회 (팀 내 목록용)
 export const findMembersByTeamId = async (teamId: number) => {
     const sql = `
         SELECT 
@@ -97,8 +97,6 @@ export const insertTeamMember = async ({team_id, user_id, position = "팀원", s
     return result.rows[0];
 }
 
-
-
 // 포지션 수정
 export const updateMemberPosition = async (teamId: number, userId: string, position: string) => {
     const sql = `
@@ -125,13 +123,12 @@ export const findActiveMembers = async (teamId: number) => {
     return result.rows;
 }
 
-
-// 팀이름으로 검색 - 없으면 undefined
+// 팀이름으로 검색 
 export const findTeamByName = async (name: string) => {
     const sql = `SELECT * FROM teams WHERE name = $1;`;
 
     const result = await pool.query(sql, [name]);
-    return result.rows[0]; //없으면 undefined
+    return result.rows[0]; 
 }
 
 // 팀 멤버 삭제
@@ -166,12 +163,12 @@ export const removeTeamWithClient = async (
   await client.query(`DELETE FROM teams WHERE id = $1`, [teamId]);
 };
 
-// 팀id로 검색 - 없으면 undefined
+// 팀id로 검색 
 export const findTeamByTeamId = async (teamId: number) => {
     const sql = `SELECT * FROM teams WHERE id = $1;`;
 
     const result = await pool.query(sql, [teamId]);
-    return result.rows[0]; //없으면 undefined
+    return result.rows[0]; 
 }
 
 // 가입되어있는 팀인지 확인

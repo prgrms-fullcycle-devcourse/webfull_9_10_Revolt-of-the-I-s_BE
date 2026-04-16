@@ -16,15 +16,33 @@ import {
   findAllWithProfile,
 } from "../repositories/team.repository";
 
+// GET /teams - 팀 목록 전체 조회 (로비용)
+export const getAllTeamsWithProfile = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user!.uuid;
+    const rows = await findAllWithProfile(userId);
 
-// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (임시)
+    const teamsMap = rows.reduce((acc: any, row: any) => {
+      if (!acc[row.team_id]) {
+        acc[row.team_id] = {
+          id: row.team_id,
+          name: row.team_name,
+          isMember: row.is_member === 1,
+          memberCount: parseInt(row.member_count, 10),
+          previewImages: (row.preview_images || [])
+        };    
+      }
+      return acc;
+    }, {});
+    res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
+})
+
+// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (❗️임시)
 export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.uuid;
   const rows = await findAllWithMembers(userId);
 
   const teamsMap = rows.reduce((acc: any, row: any) => {
     if (!acc[row.team_id]) {
-      // 팀이 아직 맵이 없으면 바로 생성
       acc[row.team_id] = {
         id: row.team_id,
         name: row.team_name,
@@ -33,7 +51,7 @@ export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
         members: [],
       };
     }
-    // 팀이 이미 맵에 있으면 멤버 정보를 추가
+    
     if (row.member_id) {
       acc[row.team_id].members.push({
         id: row.member_id,
@@ -56,27 +74,7 @@ export const getAllTeams = catchAsync(async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
 });
 
-// GET /teams - 팀 목록 전체 조회로비용 팀 목록 조회
-export const getAllTeamsWithProfile = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user!.uuid;
-    const rows = await findAllWithProfile(userId);
-
-    const teamsMap = rows.reduce((acc: any, row: any) => {
-      if (!acc[row.team_id]) {
-        acc[row.team_id] = {
-          id: row.team_id,
-          name: row.team_name,
-          isMember: row.is_member === 1,
-          memberCount: parseInt(row.member_count, 10),
-          previewImages: (row.preview_images || [])
-        };    
-      }
-      return acc;
-    }, {});
-    res.status(StatusCodes.OK).json(SUCCESS(Object.values(teamsMap)));
-})
-
-// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (프론트 연결 전)
+// GET /teams/:teamId/members - 특정 팀 멤버 목록 조회 (❗️프론트 연결 전)
 export const getTeamMembers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const teamId = req.verifiedTeamId!;
@@ -104,14 +102,13 @@ export const createTeam = catchAsync(
     const { name, pin_password } = req.body;
     const owner_id = req.user!.uuid;
 
-    // 유효성 검사
     if (!v.isValidTeamName(name)) {
       throw new AppError(400, "팀 이름은 2자 이상 30자 이하로 입력해주세요.");
     }
     if (!v.isValidPin(pin_password)) {
       throw new AppError(400, "핀 번호는 6자리 숫자여야 합니다.");
     }
-    // name 중복 확인
+
     const team = await findTeamByName(name);
     if (team) {
       return res.status(StatusCodes.CONFLICT).json(ERROR.CONFLICT);
@@ -147,11 +144,10 @@ export const joinTeam = catchAsync(
     if (!v.isValidId(req.params.teamId)) {
       return res.status(StatusCodes.BAD_REQUEST).json(ERROR.BAD_REQUEST);
     }
-    //teamId 없을 때
+
     const team = await findTeamByTeamId(teamId);
     if (!team) return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
 
-    // 신규 가입 시 PIN 번호 검증
     if (!v.isValidPin(password)) {
       throw new AppError(400, "올바른 6자리 핀 번호를 입력해주세요.");
     }
