@@ -1392,6 +1392,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [version]
               properties:
                 title:
                   type: string
@@ -1401,6 +1402,9 @@ paths:
                   type: string
                   description: Markdown 형식의 회의 내용
                   example: "## 결정 사항\n- MVP 기능 확정 (수정)"
+                version:
+                  type: integer
+                  example: 3
       responses:
         "200":
           description: 회의록 수정 성공
@@ -1417,16 +1421,26 @@ paths:
                         nullable: true
                         example: null
         "400":
-          description: 제목이 1~100자 범위를 벗어남 (content 단독 수정 시엔 400 미발생)
+          description: 잘못된 요청 (version 누락 또는 제목 유효성 실패)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                data: null
-                meta: null
-                error: "제목은 1~100자 사이여야 합니다."
+              examples:
+                noVersion:
+                  summary: version 누락
+                  value:
+                    success: false
+                    data: null
+                    meta: null
+                    error: "version 필드가 필요합니다."
+                invalidTitle:
+                  summary: 제목 길이 제한 위반
+                  value:
+                    success: false
+                    data: null
+                    meta: null
+                    error: "제목은 1~100자 사이여야 합니다."
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1435,6 +1449,17 @@ paths:
         "404":
           description: 해당 archiveId의 회의록이 존재하지 않음
           $ref: "#/components/responses/NotFound"
+        "409":
+          description: 동시성 충돌 발생
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                data: null
+                meta: null
+                error: "다른 사용자가 먼저 수정했습니다. 최신 정보를 확인한 뒤 다시 저장해주세요."
 
     delete:
       tags: [Archives]
@@ -1443,6 +1468,12 @@ paths:
         - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/archiveId"
+        - in: query
+          name: version
+          required: true
+          schema:
+            type: integer
+          description: 낙관적 락을 위한 version 값
       responses:
         "200":
           description: 회의록 삭제 성공
@@ -1459,6 +1490,17 @@ paths:
                       error:
                         nullable: true
                         example: null
+        "400":
+          description: version 쿼리 파라미터 누락
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                data: null
+                meta: null
+                error: "version 쿼리 파라미터가 필요합니다."
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1467,6 +1509,17 @@ paths:
         "404":
           description: 해당 archiveId의 회의록이 존재하지 않음
           $ref: "#/components/responses/NotFound"
+        "409":
+          description: 동시성 충돌 또는 이미 삭제된 경우
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                data: null
+                meta: null
+                error: "이미 삭제되었거나 다른 사용자가 먼저 수정했습니다."
 
   /teams/{teamId}/archives/links:
     get:
@@ -1990,15 +2043,19 @@ components:
           example: "2026-03-26T09:31:28.127Z"
 
     NoteSummary:
-      allOf:
-        - $ref: "#/components/schemas/ArchiveBase"
-        - type: object
-          properties:
-            type:
-              example: "NOTE"
-            content:
-              description: Markdown 형식의 회의 내용
-              example: "## 결정 사항\n- MVP 기능 확정"
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+          description: Markdown 형식의 회의 내용
+          example: "## 결정 사항\n- MVP 기능 확정"
+        version:
+          type: integer
+          example: 3
 
     LinkSummary:
       allOf:
