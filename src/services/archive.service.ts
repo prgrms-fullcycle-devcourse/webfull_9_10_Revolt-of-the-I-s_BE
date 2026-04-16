@@ -9,6 +9,7 @@ import {
   create,
   update,
   deleteById,
+  deleteMeetingById
 } from "../repositories/archive.repository";
 
 
@@ -63,11 +64,10 @@ export const getMeetingDetail = catchAsync(
 // 회의록 수정
 export const updateMeeting = catchAsync(async (req: Request, res: Response) => {
   const archiveId = parseInt(req.params.archiveId as string);
-  const { title, content } = req.body;
+  const { title, content, version } = req.body;
 
-  const archive = await findById(archiveId);
-  if (!v.isValidArchive(archive, "NOTE")) {
-      return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
+  if (version === undefined || version === null) {
+    throw new AppError(400, "version 필드가 필요합니다.");
   }
 
   if (title && !v.isValidArchiveTitle(title)) {
@@ -77,7 +77,12 @@ export const updateMeeting = catchAsync(async (req: Request, res: Response) => {
   const updated = await update(archiveId, {
     title: title?.trim(),
     content: content?.trim(),
+    version: Number(version),
   });
+
+  if (!updated) {
+    throw new AppError(409, "다른 사용자가 먼저 수정했습니다. 최신 정보를 확인한 뒤 다시 저장해주세요.");
+  }
 
   res.status(StatusCodes.OK).json(SUCCESS(updated));
 });
@@ -85,13 +90,23 @@ export const updateMeeting = catchAsync(async (req: Request, res: Response) => {
 // 회의록 삭제
 export const deleteMeeting = catchAsync(async (req: Request, res: Response) => {
   const archiveId = parseInt(req.params.archiveId as string);
+  const version = parseInt(req.query.version as string);
+
+  // version 누락 체크
+  if (isNaN(version)) {
+    throw new AppError(400, "version 쿼리 파라미터가 필요합니다.");
+  }
 
   const archive = await findById(archiveId);
   if (!v.isValidArchive(archive, "NOTE")) {
       return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
   }
 
-  await deleteById(archiveId);
+  const deleted = await deleteMeetingById(archiveId, version);
+
+  if (!deleted) {
+    throw new AppError(409, "이미 삭제되었거나 다른 사용자가 먼저 수정했습니다.");
+  }
 
   res
     .status(StatusCodes.OK)
