@@ -92,7 +92,6 @@ export const deleteMeeting = catchAsync(async (req: Request, res: Response) => {
   const archiveId = parseInt(req.params.archiveId as string);
   const version = parseInt(req.query.version as string);
 
-  // version 누락 체크
   if (isNaN(version)) {
     throw new AppError(400, "version 쿼리 파라미터가 필요합니다.");
   }
@@ -204,7 +203,6 @@ export const deleteDocument = catchAsync(
       return res.status(StatusCodes.NOT_FOUND).json(ERROR.NOT_FOUND);
     }
     
-    // S3 버킷 내 삭제
     if (archive.type === "PDF" && archive.content) {
       await deleteFileFromS3(archive.content);
     }

@@ -22,7 +22,7 @@ export const findById = async (archiveId: number) => {
     return result.rows[0];
 }
 
-  // 생성
+// 생성
 export const create = async (data: {
     team_id: number;
     type: ArchiveType;
@@ -59,7 +59,7 @@ export const deleteMeetingById = async (archiveId: number, version: number) => {
   return result.rows[0];
 }
 
-// 삭제 
+// 문서, 링크 삭제 
 export const deleteById = async (archiveId: number) => {
   const sql = `DELETE FROM archives WHERE id = $1;`;
   return await pool.query(sql, [archiveId]);
