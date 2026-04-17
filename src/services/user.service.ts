@@ -10,8 +10,6 @@ import { deleteFileFromS3 } from '../utils/helpers/s3';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET
 
-const cache = new Map<string, number>();
-
 export interface ServiceError {
     statusCode: number;
     message: string;
@@ -141,7 +139,7 @@ export const googleSignup = async (userData: any, file?: Express.Multer.File) =>
 
 // 상태 수정
 export const status = async (uuid: string, teamId: number, status: string): Promise<{ user: any } | ServiceError> => {
-    const user = await userRepo.patchByEmail(uuid, teamId, status);
+    const user = await userRepo.patchStatusByEmail(uuid, teamId, status);
     if (!user) {
         throw new AppError(400, "잘못된 입력입니다.");
     }
@@ -155,41 +153,47 @@ export const status = async (uuid: string, teamId: number, status: string): Prom
     return { user }
 };
 
-export const userStatusMap = new Map<string, number>();
+export const cache = new Map<string, number>();
 
 // 활동 업데이트 함수
-export const updateUserActive = (userUuid: string) => {
-const now = Date.now();
-  const lastActive = userStatusMap.get(userUuid);
+export const updateUserActive = async (userUuid: string) => {
+  const now = Date.now();
+  const lastActive = cache.get(userUuid);
 
-  userStatusMap.set(userUuid, now);
+  cache.set(userUuid, now);
 
   if (!lastActive || (now - lastActive > 1000 * 60 * 10)) {
     try {
-      userRepo.patchStatus(userUuid, '활동 중');
+      const currentStatus = await userRepo.getStatus(userUuid);
+
+      const targets = ['업무 중', '쉬는 중'];
+      
+      if (targets.includes(currentStatus)) {
+        await userRepo.patchStatus(userUuid, '업무 중');
+      }
 
     } catch (err) {
       console.error("상태 복구 실패:", err);
     }
   }
 };
+
 // 오프라인 검사 함수
 export const updateStatus = async (userUuid: string): Promise<boolean> => {
-  const lastActive = userStatusMap.get(userUuid);
-  const now = Date.now();
-  
-  if (lastActive && now - lastActive < 1000 * 60) {
-    await userRepo.patchStatus(userUuid, '활동 중'); 
-    return true;
-  }
+    const lastActive = cache.get(userUuid);
+    const now = Date.now();
 
-  try {
-    await userRepo.patchStatus(userUuid, '휴식 중');
-    
-    userStatusMap.delete(userUuid); 
-  } catch (err) {
-    console.error(`[Status Sync Error] ${userUuid} 상태 변경 실패:`, err);
-  }
+    if (lastActive && now - lastActive < 1000 * 60) {
+        return true;
+    }
+
+    try {
+        await userRepo.patchStatus(userUuid, '자리 비움');
+
+        cache.delete(userUuid); 
+    } catch (err) {
+        console.error(`[Status Sync Error] ${userUuid} 상태 변경 실패:`, err);
+    }
 
   return false;
 };

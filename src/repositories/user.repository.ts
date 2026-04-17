@@ -40,7 +40,7 @@ export const findUserByEmail = async (email: string): Promise<UserEntity | null>
     return rows[0] || null;
 };
 
-export const patchByEmail = async (uuid: string, teamId: number, status: string): Promise<UserEntity | null> => {
+export const patchStatusByEmail = async (uuid: string, teamId: number, status: string): Promise<UserEntity | null> => {
     const sql = 'UPDATE team_member SET status = $1 WHERE user_id = $2 AND team_id = $3 RETURNING *';
     const params = [status, uuid, teamId]
     const { rows } = await pool.query(sql, params);
@@ -53,6 +53,12 @@ export const patchStatus = async (uuid: string, status: string): Promise<UserEnt
     const { rows } = await pool.query(sql, params);
     return rows[0] || null;
 };
+
+export const getStatus = async (uuid: string) => {
+    const sql = 'SELECT status FROM team_member WHERE user_id = $1';
+    const { rows } = await pool.query(sql, [uuid]);
+    return rows[0]?.status || null;
+}
 
 export const signupByGoogle = async (userData: any): Promise<number> => {
     const sql = `
