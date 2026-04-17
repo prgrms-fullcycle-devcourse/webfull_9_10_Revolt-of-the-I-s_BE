@@ -47,6 +47,13 @@ export const patchByEmail = async (uuid: string, teamId: number, status: string)
     return rows[0] || null;
 };
 
+export const patchStatus = async (uuid: string, status: string): Promise<UserEntity | null> => {
+    const sql = 'UPDATE team_member SET status = $1 WHERE user_id = $2 RETURNING *';
+    const params = [status, uuid]
+    const { rows } = await pool.query(sql, params);
+    return rows[0] || null;
+};
+
 export const signupByGoogle = async (userData: any): Promise<number> => {
     const sql = `
         INSERT INTO users (uuid, email, password, name, phone, github_url, profile_image, google_uid) 

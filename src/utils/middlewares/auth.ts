@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import { StatusCodes } from "http-status-codes";
 import { ERROR } from "../constants/response";
-
+import { updateUserActive } from "../../services/user.service";
 declare global {
   namespace Express {
     interface Request {
@@ -52,6 +52,8 @@ export const authMiddleware = (
       name: decoded.name,
       profileImage: decoded.profileImage!
     };
+    updateUserActive(req.user.uuid);
+
     next();
   } catch (err) {
     return res.status(StatusCodes.UNAUTHORIZED).json(ERROR.UNAUTHORIZED);
