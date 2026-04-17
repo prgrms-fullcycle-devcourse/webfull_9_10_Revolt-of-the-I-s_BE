@@ -3,6 +3,7 @@ import cors from "cors";
 import { setupSwagger } from "./config/swagger";
 import apiRouter from "./routes/main.routes";
 import cookieParser from "cookie-parser";
+import { startStatusScheduler } from './utils/helpers/cron'
 
 const app: Express = express();
 
@@ -17,6 +18,7 @@ app.use(
     credentials: true,
   }),
 );
+startStatusScheduler();
 
 app.use(cookieParser());
 app.use(express.json());
