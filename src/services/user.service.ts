@@ -10,6 +10,8 @@ import { deleteFileFromS3 } from '../utils/helpers/s3';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET
 
+const cache = new Map<string, number>();
+
 export interface ServiceError {
     statusCode: number;
     message: string;
@@ -151,6 +153,45 @@ export const status = async (uuid: string, teamId: number, status: string): Prom
     });
 
     return { user }
+};
+
+export const userStatusMap = new Map<string, number>();
+
+// 활동 업데이트 함수
+export const updateUserActive = (userUuid: string) => {
+const now = Date.now();
+  const lastActive = userStatusMap.get(userUuid);
+
+  userStatusMap.set(userUuid, now);
+
+  if (!lastActive || (now - lastActive > 1000 * 60 * 10)) {
+    try {
+      userRepo.patchStatus(userUuid, '활동 중');
+
+    } catch (err) {
+      console.error("상태 복구 실패:", err);
+    }
+  }
+};
+// 오프라인 검사 함수
+export const updateStatus = async (userUuid: string): Promise<boolean> => {
+  const lastActive = userStatusMap.get(userUuid);
+  const now = Date.now();
+  
+  if (lastActive && now - lastActive < 1000 * 60) {
+    await userRepo.patchStatus(userUuid, '활동 중'); 
+    return true;
+  }
+
+  try {
+    await userRepo.patchStatus(userUuid, '휴식 중');
+    
+    userStatusMap.delete(userUuid); 
+  } catch (err) {
+    console.error(`[Status Sync Error] ${userUuid} 상태 변경 실패:`, err);
+  }
+
+  return false;
 };
 
 // 프로필 이미지 수정
