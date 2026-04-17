@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { validate } from "../utils/middlewares/validators";
 import { upload } from "../utils/helpers/s3";
 import { authMiddleware } from "../utils/middlewares/auth";
+import { patchStatus } from "../repositories/user.repository";
+import { cache } from '../services/user.service';
 
 const router: Router = Router();
 
@@ -79,7 +81,10 @@ router.post("/login", catchAsync(async (req: Request, res: Response) => {
 );
 
 // --- [로그아웃] ---
-router.post("/logout", catchAsync(async (req: Request, res: Response) => {
+router.post("/logout",
+  authMiddleware, 
+  catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
     const token = req.cookies.accessToken
     if (!token) {
         throw new AppError(400, "인증 정보가 없습니다.");
@@ -90,6 +95,8 @@ router.post("/logout", catchAsync(async (req: Request, res: Response) => {
       sameSite: "none",
     });
 
+    await patchStatus(user!.uuid, '자리 비움');
+    cache.delete(user!.uuid);
     return res.status(200).json({
       success: true,
       error: null,
