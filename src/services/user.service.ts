@@ -184,7 +184,7 @@ export const updateStatus = async (userUuid: string): Promise<boolean> => {
     const lastActive = cache.get(userUuid);
     const now = Date.now();
 
-    if (lastActive && now - lastActive < 1000 * 60) {
+    if (lastActive && now - lastActive < 1000 * 60 * 10) {
         return true;
     }
 
