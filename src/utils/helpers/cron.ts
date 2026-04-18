@@ -9,9 +9,12 @@ export const startStatusScheduler = () => {
     const userUuids = Array.from(cache.keys());
     
     for (const uuid of userUuids) {
+      console.log(`유저 ${uuid} 상태 업데이트 시도...`);
       await updateStatus(uuid);
     }
+
+    console.log("상태 관리 완료");
   });
   
-  console.log("상태 관리 완료.");
+
 };

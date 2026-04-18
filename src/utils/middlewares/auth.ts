@@ -52,7 +52,7 @@ export const authMiddleware = (
       name: decoded.name,
       profileImage: decoded.profileImage!
     };
-    // updateUserActive(req.user.uuid);
+    updateUserActive(req.user.uuid);
 
     next();
   } catch (err) {

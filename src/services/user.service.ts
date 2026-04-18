@@ -161,6 +161,7 @@ export const updateUserActive = async (userUuid: string) => {
   const lastActive = cache.get(userUuid);
 
   cache.set(userUuid, now);
+  console.log(`유저 ${userUuid} 활동 업데이트`);
 
   if (!lastActive || (now - lastActive > 1000 * 60 * 10)) {
     try {
