@@ -83,12 +83,12 @@ export const insertTeamMemberWithClient = async (
 ) => {
   await client.query(
     `INSERT INTO team_member (team_id, user_id, position, status) VALUES ($1, $2, $3, $4)`,
-    [data.team_id, data.user_id, '팀원', '업무 중']
+    [data.team_id, data.user_id, '팀원', '자리 비움']
   );
 };
 
 // 팀멤버 추가
-export const insertTeamMember = async ({team_id, user_id, position = "팀원", status="업무 중"}: {team_id: number; user_id: string; position?: string; status?: string;}) => {
+export const insertTeamMember = async ({team_id, user_id, position = "팀원", status="자리 비움"}: {team_id: number; user_id: string; position?: string; status?: string;}) => {
     const sql = `INSERT INTO team_member (team_id, user_id, position, status)
         VALUES ($1, $2, $3, $4)
         RETURNING *;`;
