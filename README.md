@@ -7,8 +7,8 @@
   <a href="https://webfull-9-10-revolt-of-the-i-s-fe-e.vercel.app/" target="_blank">
     <img src="https://img.shields.io/badge/Live_Demo-339933?style=flat-square&logo=googlechrome&logoColor=white"/>
   </a>
-  <a href="https://i-station.onrender.com/" target="_blank">
-    <img src="https://img.shields.io/badge/Backend_Server-4169E1?style=flat-square&logo=render&logoColor=white"/>
+  <a href="https://i-station.onrender.com/api-docs" target="_blank">
+    <img src="https://img.shields.io/badge/Swagger_Docs-85EA2D?style=flat-square&logo=swagger&logoColor=black"/>
   </a>
   <a href="https://github.com/prgrms-fullcycle-devcourse/webfull_9_10_Revolt-of-the-I-s_FE" target="_blank">
     <img src="https://img.shields.io/badge/Frontend_Repo-181717?style=flat-square&logo=github&logoColor=white"/>
